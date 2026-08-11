@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.common.errors import AppError
 from app.modules.moderation.models import Block
-from app.modules.users.dtos import PreferencesUpdate, PrivacyUpdate, ProfileUpdate
+from app.modules.users.dtos import PreferencesUpdate, ProfileUpdate
 from app.modules.users.models import Connection, User
 
 

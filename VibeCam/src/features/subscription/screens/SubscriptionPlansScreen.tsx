@@ -68,7 +68,7 @@ export function SubscriptionPlansScreen({ navigation }: any) {
       {/* Creator Earning Info */}
       <Card style={styles.earnCard}>
         <View style={styles.earnRow}>
-          <View style={[styles.earnIcon, { backgroundColor: '#EAF8F3' }]}>
+          <View style={[styles.earnIcon, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
             <Ionicons name="trending-up" size={20} color={colors.success} />
           </View>
           <View style={{ flex: 1 }}>
@@ -123,7 +123,7 @@ export function SubscriptionPlansScreen({ navigation }: any) {
                 style={[
                   styles.coinCard, 
                   isPopular && styles.highlightedCoin,
-                  { backgroundColor: isPopular ? '#FFFBFD' : '#ffffff' }
+                  { backgroundColor: isPopular ? colors.surfaceAlt : colors.surface }
                 ]}
               >
                 {item.bonusCoins > 0 && (
@@ -198,14 +198,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
     borderWidth: 1,
-    borderColor: '#F0E5EB',
+    borderColor: colors.border,
   },
   highlightedCoin: { borderColor: colors.primary, borderWidth: 2 },
   bonusBadge: {
     position: 'absolute',
     top: 8,
     left: 8,
-    backgroundColor: '#EAF8F3',
+    backgroundColor: 'rgba(16,185,129,0.15)',
     borderRadius: 8,
     paddingHorizontal: 6,
     paddingVertical: 3,
@@ -251,12 +251,12 @@ const styles = StyleSheet.create({
   rateItem: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#F7F4FA',
+    backgroundColor: colors.surfaceAlt,
     paddingVertical: 10,
     borderRadius: 12,
     gap: 4,
     borderWidth: 1,
-    borderColor: '#ECE6F2',
+    borderColor: colors.border,
   },
   rateLabel: { color: colors.muted, fontSize: 9, fontWeight: '800' },
   rateValue: { color: colors.text, fontSize: 10, fontWeight: '900' },

@@ -150,7 +150,7 @@ export const useAppStore = create<AppState>()(
       apiError: null,
       selectedPurpose: 'Talk',
       anonymousMode: false,
-      darkMode: false,
+      darkMode: true,
       profile: {
         name: '',
         age: '',
@@ -178,7 +178,7 @@ export const useAppStore = create<AppState>()(
         language: 'English',
         minAge: 18,
         maxAge: 35,
-        onlineOnly: true,
+        onlineOnly: false,
         gender: 'Any',
         city: '',
       },

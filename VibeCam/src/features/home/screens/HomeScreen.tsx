@@ -28,6 +28,7 @@ import {
   Avatar,
   ui,
   Button,
+  resolveImageUrl,
 } from '../../../components/ui';
 import { PURPOSES } from '../../../constants/data';
 import { colors, gradients } from '../../../theme';
@@ -58,14 +59,14 @@ function parseUTCDate(value: string): Date {
 
 function RecommendedPersonGridCard({ person, onPress }: { person: any; onPress: () => void }) {
   const hasPhoto = !!person.avatarUrl || !!person.avatarUri;
-  const photoUrl = person.avatarUrl || person.avatarUri;
+  const photoUrl = resolveImageUrl(person.avatarUrl || person.avatarUri);
   const bgColor = person.avatarColor || '#5B5CE2';
   const initial = (person.name || '?')[0].toUpperCase();
 
   return (
     <Pressable style={homeCardStyles.gridCard} onPress={onPress}>
       {/* Full-card image or gradient background */}
-      {hasPhoto ? (
+      {hasPhoto && photoUrl ? (
         <Image source={{ uri: photoUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
       ) : (
         <LinearGradient
@@ -123,7 +124,7 @@ const homeCardStyles = StyleSheet.create({
     height: 200,
     borderRadius: 18,
     overflow: 'hidden',
-    backgroundColor: '#F5F6FF',
+    backgroundColor: colors.surfaceAlt,
     position: 'relative',
   },
   gridInitialWrapper: {
@@ -143,7 +144,7 @@ const homeCardStyles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
@@ -227,7 +228,6 @@ export function HomeScreen({ navigation }: any) {
   const storyHandleY = useRef(new Animated.Value(220)).current;
   const [followRequests, setFollowRequests] = useState<any[]>([]);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
-  const [connectActivity, setConnectActivity] = useState<any>(null);
   const [circleInviteCount, setCircleInviteCount] = useState(0);
   const [stories, setStories] = useState<any[]>([]);
   const [activeStoryOwner, setActiveStoryOwner] = useState<string | null>(null);
@@ -237,7 +237,6 @@ export function HomeScreen({ navigation }: any) {
   const [storyProgress, setStoryProgress] = useState(0);
   const [storyReply, setStoryReply] = useState('');
   const [viewersOpen, setViewersOpen] = useState(false);
-  const [dismissedMatchId, setDismissedMatchId] = useState<string | null>(null);
   const [reactionBurst, setReactionBurst] = useState('');
   const [coinBalance, setCoinBalance] = useState(0);
   const [dailyRewardOpen, setDailyRewardOpen] = useState(false);
@@ -340,18 +339,13 @@ export function HomeScreen({ navigation }: any) {
   }, [currentUserId]);
   useFocusEffect(loadFollowRequests);
   const loadHomeActivity = useCallback(() => {
-    void Promise.all([chatApi.conversations(), matchingApi.status(), contentApi.circleInvites()])
-      .then(([conversationResult, matchResult, circleResult]) => {
+    void Promise.all([chatApi.conversations(), contentApi.circleInvites()])
+      .then(([conversationResult, circleResult]) => {
         setUnreadChatCount(
           conversationResult.data.reduce(
             (total: number, item: any) => total + Number(item.unread_count || 0),
             0,
           ),
-        );
-        setConnectActivity(
-          matchResult.data && ['found', 'waiting', 'accepted'].includes(matchResult.data.status)
-            ? matchResult.data
-            : null,
         );
         setCircleInviteCount(circleResult.data.length);
       })
@@ -464,7 +458,7 @@ export function HomeScreen({ navigation }: any) {
     }
   };
   return (
-    <Screen scroll={false}>
+    <Screen scroll={false} edges={['top', 'left', 'right']}>
       <Animated.View
         {...storyRailPan.panHandlers}
         style={[
@@ -481,41 +475,41 @@ export function HomeScreen({ navigation }: any) {
           },
         ]}
       >
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.homeContent}>
-          <View style={styles.topRow}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Pressable onPress={() => navigation.navigate('Profile')}>
-                {profile.avatarUri ? (
-                  <Image source={{ uri: profile.avatarUri }} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceAlt }} />
-                ) : (
-                  <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontWeight: '800', color: '#fff', fontSize: 16 }}>{profile.name[0].toUpperCase()}</Text>
-                  </View>
-                )}
-              </Pressable>
-              <View>
-                <Text style={styles.eyebrow}>YOUR VIBECIRCLE</Text>
-                <Text style={[ui.title, { fontSize: 18, marginTop: -2 }]}>Hi, {profile.name.split(' ')[0]} 👋</Text>
-              </View>
-            </View>
-            <View style={styles.homeHeaderActions}>
-              <Pressable
-                onPress={() => navigation.navigate('SubscriptionPlans')}
-                style={({ pressed }) => [styles.coinHeaderChip, pressed && { opacity: 0.72 }]}
-              >
-                <LinearGradient colors={gradients.warm} style={styles.coinHeaderIcon}>
-                  <Ionicons name="logo-bitcoin" size={15} color="#fff" />
-                </LinearGradient>
-                <Text style={styles.coinHeaderValue}>{coinBalance}</Text>
-                <Ionicons name="add-circle" size={16} color={colors.primary} />
-              </Pressable>
-              <IconButton
-                icon="notifications-outline"
-                badge={notifications}
-                onPress={() => navigation.navigate('Notifications')}
-              />
+        <View style={styles.topRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Pressable onPress={() => navigation.navigate('Profile')}>
+              {profile.avatarUri && resolveImageUrl(profile.avatarUri) ? (
+                <Image source={{ uri: resolveImageUrl(profile.avatarUri)! }} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceAlt }} />
+              ) : (
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontWeight: '800', color: '#fff', fontSize: 16 }}>{profile.name[0].toUpperCase()}</Text>
+                </View>
+              )}
+            </Pressable>
+            <View>
+              <Text style={styles.eyebrow}>YOUR VIBECIRCLE</Text>
+              <Text style={[ui.title, { fontSize: 18, marginTop: -2 }]}>Hi, {profile.name.split(' ')[0]} 👋</Text>
             </View>
           </View>
+          <View style={styles.homeHeaderActions}>
+            <Pressable
+              onPress={() => navigation.navigate('SubscriptionPlans')}
+              style={({ pressed }) => [styles.coinHeaderChip, pressed && { opacity: 0.72 }]}
+            >
+              <LinearGradient colors={gradients.warm} style={styles.coinHeaderIcon}>
+                <Ionicons name="logo-bitcoin" size={15} color="#fff" />
+              </LinearGradient>
+              <Text style={styles.coinHeaderValue}>{coinBalance}</Text>
+              <Ionicons name="add-circle" size={16} color={colors.primary} />
+            </Pressable>
+            <IconButton
+              icon="notifications-outline"
+              badge={notifications}
+              onPress={() => navigation.navigate('Notifications')}
+            />
+          </View>
+        </View>
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={[styles.homeContent, { paddingTop: 12 }]}>
           {!!followRequests.length && (
             <Card
               onPress={() => navigation.navigate('ConnectionRequest')}
@@ -534,41 +528,7 @@ export function HomeScreen({ navigation }: any) {
               </Text>
             </Card>
           )}
-          <Section
-            title="Explore by purpose"
-            action="See all"
-            onAction={() => navigation.navigate('ChoosePurpose')}
-          />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.purposeRow}
-          >
-            {PURPOSES.map((item) => (
-              <Pressable
-                key={item.name}
-                onPress={() => {
-                  useAppStore.getState().selectPurpose(item.name);
-                  navigation.navigate('Discover');
-                }}
-                style={[
-                  styles.purposeCard,
-                  {
-                    backgroundColor: darkMode ? '#181C30' : `${item.color}0A`,
-                    borderColor: darkMode ? '#333A57' : `${item.color}20`,
-                    borderTopWidth: 2.5,
-                    borderTopColor: item.color,
-                  },
-                ]}
-              >
-                <View style={[styles.purposeIcon, { backgroundColor: item.color }]}>
-                  <Ionicons name={item.icon as any} size={20} color="#fff" />
-                </View>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text style={styles.smallMuted}>{item.subtitle}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
+
           <Section
             title="Recommended people"
             action="See all"
@@ -649,8 +609,8 @@ export function HomeScreen({ navigation }: any) {
               <View style={[styles.storyRing, styles.addStoryRing]}>
                 {storyUploading ? (
                   <ActivityIndicator color={colors.primary} />
-                ) : profile.avatarUri ? (
-                  <Image source={{ uri: profile.avatarUri }} style={styles.storyAvatar} />
+                ) : (profile.avatarUri && resolveImageUrl(profile.avatarUri)) ? (
+                  <Image source={{ uri: resolveImageUrl(profile.avatarUri)! }} style={styles.storyAvatar} />
                 ) : (
                   <Ionicons name="person" size={28} color={colors.muted} />
                 )}
@@ -675,7 +635,7 @@ export function HomeScreen({ navigation }: any) {
                 <View style={[styles.storyRing, viewed && styles.storyViewed]}>
                   <Image
                     source={{
-                      uri: (group.mine ? profile.avatarUri : group.avatarUrl) || cover.media_url,
+                      uri: resolveImageUrl(group.mine ? profile.avatarUri : group.avatarUrl) || cover.media_url || undefined,
                     }}
                     style={styles.storyAvatar}
                   />
@@ -1074,7 +1034,7 @@ export function HomeScreen({ navigation }: any) {
         onRequestClose={() => setDailyRewardOpen(false)}
       >
         <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.65)', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-          <View style={{ backgroundColor: '#fff', width: '100%', maxWidth: 360, borderRadius: 20, padding: 24, alignItems: 'center', gap: 16, elevation: 10 }}>
+          <View style={{ backgroundColor: colors.surface, width: '100%', maxWidth: 360, borderRadius: 20, padding: 24, alignItems: 'center', gap: 16, elevation: 10 }}>
             <LinearGradient
               colors={['#8B6BD9', '#5B5CE2']}
               style={{ width: 70, height: 70, borderRadius: 35, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}
@@ -1082,7 +1042,7 @@ export function HomeScreen({ navigation }: any) {
               <Ionicons name="gift" size={36} color="#fff" />
             </LinearGradient>
 
-            <Text style={[ui.h2, { textAlign: 'center', color: '#11162A', fontSize: 20 }]}>
+            <Text style={[ui.h2, { textAlign: 'center', color: colors.text, fontSize: 20 }]}>
               Daily Login Rewards 🎁
             </Text>
 
@@ -1092,7 +1052,7 @@ export function HomeScreen({ navigation }: any) {
                   Day {dailyRewardData.streak_day} Claimed successfully! You received:
                 </Text>
                 
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0ECFF', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, gap: 6, marginVertical: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceAlt, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, gap: 6, marginVertical: 4 }}>
                   <Ionicons name="logo-bitcoin" size={20} color={colors.primary} />
                   <Text style={{ fontSize: 18, fontWeight: '800', color: colors.primary }}>
                     +{dailyRewardData.coins_awarded} Coins

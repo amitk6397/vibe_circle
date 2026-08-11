@@ -4,8 +4,29 @@ import { realtimeService, RealtimeEvent } from '../../../services/realtimeSocket
 import { useAppStore } from '../../../store/useAppStore';
 import { Chat, Message } from '../../../types';
 
-const timeLabel = (value?: string) =>
-  value ? new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now';
+const timeLabel = (value?: string) => {
+  if (!value) return 'Now';
+  try {
+    let dateStr = value;
+    if (!dateStr.endsWith('Z') && !dateStr.includes('+')) {
+      const parts = dateStr.split(' ');
+      if (parts.length === 2 && !parts[1].includes('+') && !parts[1].includes('-')) {
+        dateStr = `${dateStr.replace(' ', 'T')}Z`;
+      } else if (dateStr.includes('T')) {
+        dateStr = `${dateStr}Z`;
+      } else {
+        dateStr = `${dateStr}T00:00:00Z`;
+      }
+    }
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return 'Now';
+  }
+};
 
 const mapMessage = (raw: any, chatId: string, currentUserId: string | null): Message => ({
   id: raw.id,
@@ -104,8 +125,12 @@ export function usePrivateRealtime(chatId: string) {
       const older = data.map((item) => mapMessage(item, chatId, currentUserId));
       useAppStore.setState((state) => {
         const existingIds = new Set(state.messages.map((item) => item.id));
+        const updatedChats = state.chats.map((c) =>
+          c.id === chatId ? { ...c, unread: 0 } : c
+        );
         return {
           messages: [...older.filter((item) => !existingIds.has(item.id)), ...state.messages],
+          chats: updatedChats,
         };
       });
       await chatApi.markRead(chatId);

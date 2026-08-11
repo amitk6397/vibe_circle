@@ -6,7 +6,6 @@ export { default as MyActivityScreen } from './screens/MyActivityScreen';
 export { default as MyCommunitiesScreen } from './screens/MyCommunitiesScreen';
 export { default as PrivateCirclesScreen } from './screens/PrivateCirclesScreen';
 export { default as ConnectionsScreen } from './screens/ConnectionsScreen';
-export { default as PrivacySettingsScreen } from './screens/PrivacySettingsScreen';
 export { default as BlockedUsersScreen } from './screens/BlockedUsersScreen';
 export { default as SettingsSupportScreen } from './screens/SettingsSupportScreen';
 export { default as SupportArticleScreen } from './screens/SupportArticleScreen';

@@ -3,7 +3,7 @@ import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'rea
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Card, EmptyState, Header, Screen, ui } from '../../../components/ui';
+import { Button, Card, EmptyState, Header, Screen, ui } from '../../../components/ui';
 import { colors, gradients } from '../../../theme';
 import { authApi, walletApi } from '../../../services/api';
 
@@ -35,6 +35,10 @@ export function WalletScreen({ navigation }: any) {
     1,
     ...(dashboard?.chart || []).map((item: any) => Math.max(item.spent, item.earned)),
   );
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayData = (dashboard?.chart || []).find((item: any) => item.date === todayStr) ||
+    (dashboard?.chart && dashboard.chart.length > 0 ? dashboard.chart[dashboard.chart.length - 1] : { earned: 0, spent: 0, date: todayStr });
+  const netCoins = todayData.earned - todayData.spent;
   const visibleChart = (dashboard?.chart || []).filter(
     (_: any, index: number, all: any[]) =>
       all.length <= 12 || index % Math.ceil(all.length / 12) === 0,
@@ -128,6 +132,48 @@ export function WalletScreen({ navigation }: any) {
                 <Text style={styles.legendText}>Spent</Text>
               </View>
             </View>
+
+            {/* Today's Circle Status Graph Indicator */}
+            <View style={styles.todayStatsRow}>
+              <View style={styles.donutContainer}>
+                <View style={[styles.donutOuter, { borderColor: colors.border }]}>
+                  <View style={styles.donutInner}>
+                    <Text style={[styles.donutNetText, { color: netCoins >= 0 ? colors.success : colors.primary }]}>
+                      {netCoins >= 0 ? '+' : ''}{netCoins}
+                    </Text>
+                    <Text style={styles.donutLabel}>Net Coins</Text>
+                  </View>
+                </View>
+                <View style={[styles.donutProgressRing, { borderColor: netCoins >= 0 ? colors.success : colors.primary, borderTopColor: 'transparent', borderRightColor: 'transparent', transform: [{ rotate: '45deg' }] }]} />
+              </View>
+              <View style={{ flex: 1, gap: 10 }}>
+                <Text style={[ui.h2, { fontSize: 15 }]}>
+                  {new Date(todayData.date).toLocaleDateString(undefined, {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </Text>
+                <View style={styles.todayBarRow}>
+                  <Ionicons name="arrow-up-circle" size={16} color={colors.success} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.todayBarLabel}>Earned: <Text style={{ color: colors.success, fontWeight: '800' }}>+{todayData.earned} coins</Text></Text>
+                    <View style={styles.todayProgressBarTrack}>
+                      <View style={[styles.todayProgressBar, { backgroundColor: colors.success, width: `${(todayData.earned / Math.max(1, todayData.earned + todayData.spent)) * 100}%` }]} />
+                    </View>
+                  </View>
+                </View>
+                <View style={styles.todayBarRow}>
+                  <Ionicons name="arrow-down-circle" size={16} color={colors.primary} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.todayBarLabel}>Spent: <Text style={{ color: colors.primary, fontWeight: '800' }}>-{todayData.spent} coins</Text></Text>
+                    <View style={styles.todayProgressBarTrack}>
+                      <View style={[styles.todayProgressBar, { backgroundColor: colors.primary, width: `${(todayData.spent / Math.max(1, todayData.earned + todayData.spent)) * 100}%` }]} />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
             {!!dashboard.chart?.length && (
               <ScrollView
                 horizontal
@@ -204,70 +250,6 @@ export function WalletScreen({ navigation }: any) {
             )}
           </Card>
 
-          <Card style={styles.breakdownCard}>
-            <Text style={ui.h2}>Balance breakdown</Text>
-            <Breakdown
-              label="Purchased coins"
-              value={dashboard.purchasedCoins}
-              color={colors.info}
-            />
-            <Breakdown label="Bonus coins" value={dashboard.bonusCoins} color={colors.accent} />
-            <Breakdown
-              label="Pending earnings"
-              value={dashboard.pendingEarnings}
-              color={colors.warning}
-            />
-            <Breakdown
-              label="Held in sessions"
-              value={dashboard.heldCoins}
-              color={colors.primary}
-            />
-          </Card>
-
-          <View style={styles.historyTitle}>
-            <Text style={ui.h2}>Recent history</Text>
-            <Text style={ui.muted}>{dashboard.history.length} activities</Text>
-          </View>
-          {dashboard.history.map((item: any) => (
-            <Card key={`${item.kind}-${item.id}`} style={styles.historyCard}>
-              <View
-                style={[
-                  styles.historyIcon,
-                  { backgroundColor: item.amount > 0 ? '#EAF8F3' : '#FFF0F4' },
-                ]}
-              >
-                <Ionicons
-                  name={item.amount > 0 ? 'arrow-down' : 'arrow-up'}
-                  size={19}
-                  color={item.amount > 0 ? colors.success : colors.primary}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.historyName}>
-                  {item.title || item.type.replaceAll('_', ' ')}
-                </Text>
-                <Text style={ui.muted}>
-                  {new Date(item.createdAt).toLocaleString()} · {item.status}
-                </Text>
-              </View>
-              <Text
-                style={[
-                  styles.historyAmount,
-                  { color: item.amount > 0 ? colors.success : colors.text },
-                ]}
-              >
-                {item.amount > 0 ? '+' : ''}
-                {item.amount}{item.currency ? ` ${item.currency}` : ''}
-              </Text>
-            </Card>
-          ))}
-          {!dashboard.history.length && (
-            <EmptyState
-              title="No activity"
-              text="Your coin and earning history will appear here."
-            />
-          )}
-
           {/* Referral Section */}
           {referralInfo && (
             <Card style={styles.referralCard}>
@@ -301,6 +283,80 @@ export function WalletScreen({ navigation }: any) {
                 </View>
               </View>
             </Card>
+          )}
+
+          <Card style={styles.breakdownCard}>
+            <Text style={ui.h2}>Balance breakdown</Text>
+            <Breakdown
+              label="Purchased coins"
+              value={dashboard.purchasedCoins}
+              color={colors.info}
+            />
+            <Breakdown label="Bonus coins" value={dashboard.bonusCoins} color={colors.accent} />
+            <Breakdown
+              label="Pending earnings"
+              value={dashboard.pendingEarnings}
+              color={colors.warning}
+            />
+            <Breakdown
+              label="Held in sessions"
+              value={dashboard.heldCoins}
+              color={colors.primary}
+            />
+          </Card>
+
+          <View style={styles.historyTitle}>
+            <Text style={ui.h2}>Recent history</Text>
+            <Text style={ui.muted}>{dashboard.history.length} activities</Text>
+          </View>
+          {dashboard.history.slice(0, 10).map((item: any) => (
+            <Card key={`${item.kind}-${item.id}`} style={styles.historyCard}>
+              <View
+                style={[
+                  styles.historyIcon,
+                  { backgroundColor: item.amount > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(255,45,117,0.15)' },
+                ]}
+              >
+                <Ionicons
+                  name={item.amount > 0 ? 'arrow-down' : 'arrow-up'}
+                  size={19}
+                  color={item.amount > 0 ? colors.success : colors.primary}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.historyName}>
+                  {item.title || item.type.replaceAll('_', ' ')}
+                </Text>
+                <Text style={ui.muted}>
+                  {new Date(item.createdAt).toLocaleString()} · {item.status}
+                </Text>
+              </View>
+              <Text
+                style={[
+                  styles.historyAmount,
+                  { color: item.amount > 0 ? colors.success : colors.text },
+                ]}
+              >
+                {item.amount > 0 ? '+' : ''}
+                {item.amount}{item.currency ? ` ${item.currency}` : ''}
+              </Text>
+            </Card>
+          ))}
+          {dashboard.history.length > 10 && (
+            <View style={{ marginTop: 8 }}>
+              <Button
+                title="View more history"
+                tone="ghost"
+                compact
+                onPress={() => navigation.navigate('TransactionHistory')}
+              />
+            </View>
+          )}
+          {!dashboard.history.length && (
+            <EmptyState
+              title="No activity"
+              text="Your coin and earning history will appear here."
+            />
           )}
         </>
       ) : !loading ? (
@@ -365,7 +421,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 4,
     borderRadius: 16,
-    backgroundColor: '#F1EDF5',
+    backgroundColor: colors.surfaceAlt,
     gap: 4,
   },
   periodTab: { flex: 1, paddingVertical: 9, borderRadius: 12, alignItems: 'center' },
@@ -429,9 +485,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 7,
     borderRadius: 10,
-    backgroundColor: '#F5F1F5',
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#F0E5EB',
+    borderColor: colors.border,
   },
   dayChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   dayChipText: { color: colors.muted, fontSize: 10, fontWeight: '800' },
@@ -446,7 +502,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     position: 'relative',
   },
-  gridLine: { position: 'absolute', left: 26, right: 0, height: 1, backgroundColor: '#EDE4EA' },
+  gridLine: { position: 'absolute', left: 26, right: 0, height: 1, backgroundColor: colors.border },
   axisLabels: {
     position: 'absolute',
     left: 0,
@@ -478,7 +534,7 @@ const styles = StyleSheet.create({
     top: -7,
     width: 18,
     height: 18,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1.5,
     transform: [{ rotate: '45deg' }],
     alignItems: 'center',
@@ -509,7 +565,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 9,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5EEF2',
+    borderBottomColor: colors.border,
   },
   breakdownDot: { width: 8, height: 8, borderRadius: 4 },
   breakdownValue: { color: colors.text, fontSize: 14, fontWeight: '900' },
@@ -534,7 +590,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F4F0FF',
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
@@ -560,7 +616,7 @@ const styles = StyleSheet.create({
   referralStats: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9F8FF',
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
     padding: 12,
     gap: 0,
@@ -568,7 +624,80 @@ const styles = StyleSheet.create({
   referralStat: { flex: 1, alignItems: 'center', gap: 3 },
   referralStatValue: { fontSize: 22, fontWeight: '900', color: colors.text },
   referralStatLabel: { fontSize: 12, color: colors.muted, fontWeight: '600' },
-  referralStatDivider: { width: 1, height: 36, backgroundColor: '#E0DFF5', marginHorizontal: 8 },
+  referralStatDivider: { width: 1, height: 36, backgroundColor: colors.border, marginHorizontal: 8 },
+  todayStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+    padding: 16,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 16,
+    marginHorizontal: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  donutContainer: {
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  donutOuter: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+  },
+  donutInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  donutNetText: {
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  donutLabel: {
+    fontSize: 9,
+    color: colors.muted,
+    fontWeight: '700',
+    marginTop: 2,
+    textTransform: 'uppercase',
+  },
+  donutProgressRing: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 6,
+    borderColor: 'transparent',
+  },
+  todayBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  todayBarLabel: {
+    fontSize: 11,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  todayProgressBarTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+    marginTop: 2,
+  },
+  todayProgressBar: {
+    height: '100%',
+    borderRadius: 3,
+  },
 });
 
 export default WalletScreen;

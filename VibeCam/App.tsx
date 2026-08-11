@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { useEffect } from 'react';
+import { NativeModules, Platform } from 'react-native';
 import { useAppStore } from './src/store/useAppStore';
 import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import {
@@ -15,6 +16,27 @@ export default function App() {
   const bootstrap = useAppStore((state) => state.bootstrap);
   const darkMode = useAppStore((state) => state.darkMode);
   const currentUserId = useAppStore((state) => state.currentUserId);
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      try {
+        const hasModule =
+          !!NativeModules.ExpoNavigationBar ||
+          !!(global as any).expo?.modules?.ExpoNavigationBar;
+        if (hasModule) {
+          const NavigationBar = require('expo-navigation-bar');
+          if (NavigationBar && typeof NavigationBar.setBackgroundColorAsync === 'function') {
+            const color = darkMode ? '#242837' : '#FFFFFF';
+            void NavigationBar.setBackgroundColorAsync(color);
+            void NavigationBar.setButtonStyleAsync(darkMode ? 'light' : 'dark');
+          }
+        }
+      } catch (e) {
+        // Safe silent fallback
+      }
+    }
+  }, [darkMode]);
+
   useEffect(() => {
     void bootstrap();
   }, [bootstrap]);

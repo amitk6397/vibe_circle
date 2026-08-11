@@ -12,7 +12,6 @@ from app.modules.users.dtos import (
     AvailabilityUpdate,
     NotificationPreferencesUpdate,
     PreferencesUpdate,
-    PrivacyUpdate,
     ProfileUpdate,
 )
 from app.modules.users.models import Connection, User
@@ -45,10 +44,6 @@ def patch_profile(payload: ProfileUpdate, db: DbSession, user: CurrentUser):
 
 def patch_preferences(payload: PreferencesUpdate, db: DbSession, user: CurrentUser):
     return service.update_preferences(db, user, payload)
-
-
-def patch_privacy(payload: PrivacyUpdate, db: DbSession, user: CurrentUser):
-    return service.update_privacy(db, user, payload.model_dump(exclude_none=True))
 
 
 def patch_notifications(payload: NotificationPreferencesUpdate, db: DbSession, user: CurrentUser):

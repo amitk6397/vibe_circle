@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Animated,
   FlatList,
@@ -98,6 +99,7 @@ export function GoLiveScreen({ navigation }: any) {
   const engineRef = useRef<IRtcEngine | null>(null);
   const dataStreamId = useRef<number>(-1);
   const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [agoraReady, setAgoraReady] = useState(false);
   const [muted, setMuted] = useState(false);
 
   // Request Microphone and Camera Permissions (Android)
@@ -224,6 +226,10 @@ export function GoLiveScreen({ navigation }: any) {
         if (joinCode < 0) {
           throw new Error(`Agora Join failed: ${joinCode}`);
         }
+
+        if (isMounted) {
+          setAgoraReady(true);
+        }
       } catch (e: any) {
         Alert.alert('Streaming Server Error', e.message || 'Unable to connect video server.');
         setStep('setup');
@@ -234,6 +240,7 @@ export function GoLiveScreen({ navigation }: any) {
 
     return () => {
       isMounted = false;
+      setAgoraReady(false);
       // Auto-end stream on unmount
       if (streamIdRef.current) {
         livestreamApi.end(streamIdRef.current).catch(() => {});
@@ -443,7 +450,7 @@ export function GoLiveScreen({ navigation }: any) {
       <View style={styles.liveRoot}>
         
         {/* RtcSurfaceView shows local camera preview */}
-        {cameraEnabled ? (
+        {cameraEnabled && agoraReady ? (
           <RtcSurfaceView
             style={StyleSheet.absoluteFill}
             canvas={{ uid: 0 }}
@@ -453,8 +460,14 @@ export function GoLiveScreen({ navigation }: any) {
         ) : (
           <LinearGradient
             colors={['#1A0A3A', '#0D1020']}
-            style={StyleSheet.absoluteFill}
-          />
+            style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}
+          >
+            {cameraEnabled ? (
+              <ActivityIndicator size="large" color={colors.primary} />
+            ) : (
+              <Ionicons name="videocam-off" size={48} color="rgba(255,255,255,0.4)" />
+            )}
+          </LinearGradient>
         )}
 
         {/* Top bar (Floats over video) */}

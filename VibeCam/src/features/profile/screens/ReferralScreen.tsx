@@ -93,7 +93,7 @@ export function ReferralScreen({ navigation }: any) {
     : 0;
 
   return (
-    <Screen>
+    <Screen scroll={false} noPadding>
       <Header title="Refer & Earn" onBack={() => navigation.goBack()} />
 
       {loading ? (
@@ -206,10 +206,11 @@ export function ReferralScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   loadingState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 60 },
-  content: { padding: 16, gap: 18, paddingBottom: 32 },
+  content: { paddingVertical: 12, paddingHorizontal: 0, gap: 18, paddingBottom: 32 },
   heroCard: {
-    borderRadius: 24,
-    padding: 12,
+    borderRadius: 0,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
     alignItems: 'center',
     gap: 12,
     overflow: 'hidden',
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
   heroTitle: { color: '#fff', fontSize: 24, fontWeight: '900', textAlign: 'center', lineHeight: 30 },
   heroSub: { color: 'rgba(255,255,255,0.85)', textAlign: 'center', fontSize: 14, lineHeight: 21 },
   heroAccent: { color: '#FDE68A', fontWeight: '900' },
-  codeSection: { gap: 12 },
+  codeSection: { gap: 12, marginHorizontal: 12 },
   codeSectionLabel: {
     fontSize: 11,
     fontWeight: '800',
@@ -265,7 +266,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 9,
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   shareBtnText: { color: '#fff', fontWeight: '900', fontSize: 16 },
-  statsRow: { flexDirection: 'row', gap: 10 },
+  statsRow: { flexDirection: 'row', gap: 10, marginHorizontal: 12 },
   statCard: {
     flex: 1,
     alignItems: 'center',
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: 22, fontWeight: '900', color: colors.text },
   statLabel: { color: colors.muted, fontSize: 11, fontWeight: '600', textAlign: 'center', lineHeight: 16 },
-  sectionTitle: { fontSize: 17, fontWeight: '900', color: colors.text },
+  sectionTitle: { fontSize: 17, fontWeight: '900', color: colors.text, marginHorizontal: 12 },
   howStep: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -312,6 +313,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: colors.border,
+    marginHorizontal: 12,
   },
   howStepNum: {
     width: 28,
@@ -331,6 +333,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     textAlign: 'center',
     paddingHorizontal: 8,
+    marginHorizontal: 12,
   },
 });
 

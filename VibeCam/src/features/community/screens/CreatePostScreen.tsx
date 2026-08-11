@@ -122,7 +122,7 @@ export function CreatePostScreen({ navigation, route }: any) {
         }
         onBack={() => navigation.goBack()}
       />
-      <LinearGradient colors={['#FFF2F7', '#F3F0FF']} style={styles.createPostHero}>
+      <LinearGradient colors={['#2A1F3D', '#1E2540']} style={styles.createPostHero}>
         <View style={styles.createPostStep}>
           <Ionicons name="create-outline" size={19} color="#fff" />
         </View>

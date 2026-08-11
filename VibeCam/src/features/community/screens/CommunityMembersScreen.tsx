@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#F5F6FF',
+    backgroundColor: colors.surfaceAlt,
     borderColor: '#DDE1FF',
   },
   avatarStack: { flexDirection: 'row', paddingLeft: 2 },

@@ -86,7 +86,6 @@ import {
   PrivateCirclesScreen,
   MyCreationsScreen,
   MyProfileScreen,
-  PrivacySettingsScreen,
   ProfileScreen,
   ReportsScreen,
   SettingsSupportScreen,
@@ -231,7 +230,6 @@ const screens: [keyof RootStackParamList, React.ComponentType<any>][] = [
   ['PrivateCircles', PrivateCirclesScreen],
   ['MyCreations', MyCreationsScreen],
   ['Connections', ConnectionsScreen],
-  ['PrivacySettings', PrivacySettingsScreen],
   ['Reports', ReportsScreen],
   ['BlockedUsers', BlockedUsersScreen],
   ['SettingsSupport', SettingsSupportScreen],
@@ -247,7 +245,7 @@ const screens: [keyof RootStackParamList, React.ComponentType<any>][] = [
 export function AppNavigator() {
   const darkMode = useAppStore((state) => state.darkMode);
   const navigationColors = darkMode
-    ? { background: '#0D1020', card: '#181C30', text: '#F5F7FF', border: '#333A57' }
+    ? { background: colors.bg, card: colors.surface, text: colors.text, border: colors.border }
     : { background: colors.bg, card: colors.surface, text: colors.text, border: colors.border };
   return (
     <NavigationContainer

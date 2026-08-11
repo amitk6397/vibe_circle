@@ -284,7 +284,7 @@ export function CommunityDetailsScreen({ navigation, route }: any) {
                     navigation.navigate('InviteCircleMembers', { communityId: community.id })
                   }
                 >
-                  <View style={[styles.communityActionIcon, { backgroundColor: '#F0ECFF' }]}>
+                  <View style={[styles.communityActionIcon, { backgroundColor: colors.surfaceAlt }]}>
                     <Ionicons name="person-add" size={22} color={colors.primary} />
                   </View>
                   <Text style={styles.communityActionTitle}>Invite people</Text>

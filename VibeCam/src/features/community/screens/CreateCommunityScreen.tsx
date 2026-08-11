@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   },
   callControlText: { color: '#D9DCEC', fontSize: 11 },
   callSafety: { color: '#8F95AC', fontSize: 11, textAlign: 'center', marginBottom: 12 },
-  error: { color: colors.danger, backgroundColor: '#FFF0F2', padding: 12, borderRadius: 12 },
+  error: { color: colors.danger, backgroundColor: 'rgba(239,68,68,0.12)', padding: 12, borderRadius: 12 },
 });
 
 export default CreateCommunityScreen;

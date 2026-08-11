@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Dimensions,
   Image,
   Linking,
   Modal,
@@ -47,12 +48,12 @@ export function renderGiftIcon(icon: string | null | undefined, size = 16) {
 
 
 const dark = {
-  background: '#0D1020',
-  surface: '#181C30',
-  surfaceAlt: '#232A45',
-  border: '#333A57',
-  text: '#F5F7FF',
-  muted: '#AAB0C5',
+  background: '#242837',
+  surface: '#2E3347',
+  surfaceAlt: '#38405A',
+  border: '#3D4460',
+  text: '#EEF2FF',
+  muted: '#8892A4',
 };
 
 function themedChildren(children: React.ReactNode, enabled: boolean): React.ReactNode {
@@ -108,24 +109,49 @@ export function Screen({
   children,
   scroll = true,
   style,
+  edges = ['top', 'left', 'right', 'bottom'],
+  noPadding = false,
 }: {
   children: React.ReactNode;
   scroll?: boolean;
   style?: StyleProp<ViewStyle>;
+  edges?: ('top' | 'right' | 'bottom' | 'left')[];
+  noPadding?: boolean;
 }) {
   const darkMode = useAppStore((state) => state.darkMode);
+  const childrenArray = React.Children.toArray(children);
+  const headerIndex = childrenArray.findIndex(
+    (child) => React.isValidElement(child) && child.type === Header
+  );
+
+  let header: React.ReactNode = null;
+  let remainingChildren = childrenArray;
+
+  if (headerIndex !== -1) {
+    header = childrenArray[headerIndex];
+    remainingChildren = childrenArray.filter((_, idx) => idx !== headerIndex);
+  }
+
+  const themedHeader = header ? themedChildren(header, darkMode) : null;
+  const themedContent = themedChildren(remainingChildren, darkMode);
+  const bgStyle = darkMode ? { backgroundColor: dark.background } : { backgroundColor: colors.bg };
+
   return (
-    <SafeAreaView style={[styles.screen, darkMode && { backgroundColor: '#0D1020' }, style]}>
+    <SafeAreaView style={[styles.screen, bgStyle, style]} edges={edges}>
+      {themedHeader}
       {scroll ? (
         <ScrollView
+          style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, noPadding && { padding: 0, paddingHorizontal: 0 }]}
         >
-          {themedChildren(children, darkMode)}
+          {themedContent}
         </ScrollView>
       ) : (
-        themedChildren(children, darkMode)
+        <View style={{ flex: 1, padding: noPadding ? 0 : undefined }}>
+          {themedContent}
+        </View>
       )}
     </SafeAreaView>
   );
@@ -525,6 +551,67 @@ export function PersonCard({ person, onPress }: { person: Person; onPress: () =>
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.muted} style={{ marginLeft: 4 }} />
     </Card>
+  );
+}
+
+export function PersonGridCard({ person, onPress }: { person: Person; onPress: () => void }) {
+  const hasPhoto = !!person.avatarUrl;
+  const photoUrl = resolveImageUrl(person.avatarUrl);
+  const bgColor = person.avatarColor || '#5B5CE2';
+  const initial = (person.name || '?')[0].toUpperCase();
+
+  return (
+    <Pressable style={styles.gridCard} onPress={onPress}>
+      {/* Full-card image or gradient background */}
+      {hasPhoto && photoUrl ? (
+        <Image source={{ uri: photoUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      ) : (
+        <LinearGradient
+          colors={[bgColor, bgColor + 'AA']}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+      )}
+
+      {/* Initials shown when no photo */}
+      {!hasPhoto && (
+        <View style={styles.gridInitialWrapper}>
+          <Text style={styles.gridInitial}>{initial}</Text>
+        </View>
+      )}
+
+      {/* Online indicator */}
+      {person.online && (
+        <View style={styles.onlineDot}>
+          <View style={styles.onlineDotInner} />
+        </View>
+      )}
+
+      {/* Bottom gradient overlay with user details */}
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.85)']}
+        style={styles.gridOverlay}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      >
+        <Text style={styles.gridName} numberOfLines={1}>{person.name}</Text>
+        {person.city ? (
+          <View style={styles.gridDetailRow}>
+            <Ionicons name="location-outline" size={11} color="rgba(255,255,255,0.7)" />
+            <Text style={styles.gridDetailText} numberOfLines={1}>{person.city}</Text>
+          </View>
+        ) : null}
+        {/* Interest tags */}
+        <View style={styles.gridTags}>
+          {(person.interests || []).slice(0, 2).map((tag: string) => (
+            <View key={tag} style={styles.gridTag}>
+              <Text style={styles.gridTagText} numberOfLines={1}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      </LinearGradient>
+    </Pressable>
   );
 }
 
@@ -1139,9 +1226,9 @@ export function PostCard({
         onRequestClose={() => setGiftsOpen(false)}
       >
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, minHeight: 340, gap: 16 }}>
+          <View style={{ backgroundColor: dark.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, minHeight: 340, gap: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: 18, fontWeight: '800', color: '#11162A' }}>Send a Virtual Gift 🎁</Text>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: dark.text }}>Send a Virtual Gift 🎁</Text>
               <Pressable onPress={() => setGiftsOpen(false)} style={{ padding: 4 }}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </Pressable>
@@ -1431,8 +1518,18 @@ export const ui = StyleSheet.create({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: 18, paddingBottom: 110, gap: 16 },
-  header: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  content: { padding: 18, paddingBottom: 24, gap: 16 },
+  header: {
+    minHeight: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.bg,
+  },
   headerTitle: { color: colors.text, fontSize: 24, fontWeight: '900' },
   muted: ui.muted,
   button: {
@@ -1448,7 +1545,7 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   altButtonText: { color: colors.primary, fontSize: 15, fontWeight: '800' },
   secondaryButton: { backgroundColor: colors.surfaceAlt, borderWidth: 1, borderColor: '#DDE1FF' },
-  dangerButton: { backgroundColor: '#FFF0F2', borderWidth: 1, borderColor: '#FFD5DB' },
+  dangerButton: { backgroundColor: 'rgba(239,68,68,0.12)', borderWidth: 1, borderColor: '#FFD5DB' },
   ghostButton: { backgroundColor: 'transparent' },
   iconButton: {
     width: 42,
@@ -1559,7 +1656,7 @@ const styles = StyleSheet.create({
   postCard: {
     padding: 0,
     borderRadius: 0,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 0,
     shadowColor: 'transparent',
     shadowOpacity: 0,
@@ -1568,7 +1665,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginHorizontal: -12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f2f2f2',
+    borderBottomColor: colors.border,
   },
   postHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   postBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
@@ -1579,16 +1676,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: 'rgba(108, 93, 211, 0.06)',
+    backgroundColor: 'rgba(255,45,117,0.12)',
   },
   communityBadgeText: { color: colors.primary, fontSize: 10, fontWeight: '700' },
   formatBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: 'rgba(108, 93, 211, 0.04)',
+    backgroundColor: 'rgba(139,92,246,0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(108, 93, 211, 0.06)',
+    borderColor: 'rgba(139,92,246,0.2)',
   },
   formatBadgeText: {
     color: colors.primaryDark,
@@ -1603,11 +1700,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: '#FFF4E9',
+    backgroundColor: 'rgba(255,122,0,0.12)',
   },
   paidBadgeText: { color: colors.accent, fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
   postBody: {
-    color: '#2b2d42',
+    color: colors.text,
     fontSize: 15,
     lineHeight: 22,
     fontWeight: '400',
@@ -1617,9 +1714,9 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 38,
     borderRadius: 12,
-    backgroundColor: 'rgba(108, 93, 211, 0.04)',
+    backgroundColor: 'rgba(255,45,117,0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(108, 93, 211, 0.08)',
+    borderColor: 'rgba(255,45,117,0.10)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1739,19 +1836,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   instagramAuthorName: {
-    color: '#262626',
+    color: colors.text,
     fontSize: 14,
     fontWeight: '700',
   },
   instagramSubtitle: {
-    color: '#8e8e8e',
+    color: colors.muted,
     fontSize: 11,
     marginTop: 1,
   },
   instagramPostImage: {
     width: '100%',
     height: 460,
-    backgroundColor: '#efefef',
+    backgroundColor: colors.surfaceAlt,
   },
   instagramFooter: {
     paddingHorizontal: 14,
@@ -1773,7 +1870,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   instagramLikes: {
-    color: '#262626',
+    color: colors.text,
     fontSize: 14,
     fontWeight: '700',
     marginTop: 4,
@@ -1783,21 +1880,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   instagramCaptionText: {
-    color: '#262626',
+    color: colors.text,
     fontSize: 14,
     lineHeight: 18,
   },
   instagramCaptionAuthor: {
     fontWeight: '700',
-    color: '#262626',
+    color: colors.text,
   },
   instagramCommentsLink: {
-    color: '#8e8e8e',
+    color: colors.muted,
     fontSize: 13,
     marginTop: 6,
   },
   instagramTimestamp: {
-    color: '#8e8e8e',
+    color: colors.muted,
     fontSize: 10,
     marginTop: 6,
     fontWeight: '500',
@@ -1857,6 +1954,86 @@ const styles = StyleSheet.create({
   bountySubtitle: {
     color: '#F57C00',
     fontSize: 11,
+    fontWeight: '600',
+  },
+  gridCard: {
+    width: (Dimensions.get('window').width - 18 * 2 - 10) / 2,
+    aspectRatio: 3 / 4,
+    borderRadius: 18,
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceAlt,
+    position: 'relative',
+  },
+  gridInitialWrapper: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gridInitial: {
+    fontSize: 48,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.85)',
+  },
+  onlineDot: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  onlineDotInner: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: '#22C55E',
+  },
+  gridOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 10,
+    gap: 3,
+    zIndex: 1,
+  },
+  gridName: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  gridDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  gridDetailText: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 11,
+    flex: 1,
+  },
+  gridTags: {
+    flexDirection: 'row',
+    gap: 4,
+    flexWrap: 'wrap',
+    marginTop: 3,
+  },
+  gridTag: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  gridTagText: {
+    color: '#fff',
+    fontSize: 10,
     fontWeight: '600',
   },
 });

@@ -79,7 +79,7 @@ import { styles } from '../../shared-views/styles';
 export function FeedScreen({ navigation }: any) {
   const posts = useAppStore((s) => s.posts);
   return (
-    <Screen>
+    <Screen scroll={false} edges={['top', 'left', 'right']}>
       <View style={styles.topRow}>
         <View>
           <Text style={styles.eyebrow}>COMMUNITY</Text>
@@ -87,24 +87,26 @@ export function FeedScreen({ navigation }: any) {
         </View>
         <IconButton icon="add" onPress={() => navigation.navigate('CreatePost')} />
       </View>
-      <View style={ui.wrap}>
-        <Pill label="For you" selected />
-        <Pill label="Following" />
-        <Pill label="Questions" />
-        <Pill label="Saved" />
-      </View>
-      {posts.map((post) => (
-        <PostCard
-          key={post.id}
-          post={post}
-          onPress={() => navigation.navigate('PostDetails', { postId: post.id })}
-          onAuthorPress={
-            post.authorId
-              ? () => navigation.navigate('PublicProfile', { personId: post.authorId })
-              : undefined
-          }
-        />
-      ))}
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 18, gap: 16 }}>
+        <View style={ui.wrap}>
+          <Pill label="For you" selected />
+          <Pill label="Following" />
+          <Pill label="Questions" />
+          <Pill label="Saved" />
+        </View>
+        {posts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            onPress={() => navigation.navigate('PostDetails', { postId: post.id })}
+            onAuthorPress={
+              post.authorId
+                ? () => navigation.navigate('PublicProfile', { personId: post.authorId })
+                : undefined
+            }
+          />
+        ))}
+      </ScrollView>
     </Screen>
   );
 }

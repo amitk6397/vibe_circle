@@ -64,20 +64,6 @@ class PreferencesUpdate(BaseModel):
         return value
 
 
-class PrivacyUpdate(BaseModel):
-    profileVisibility: Literal["Public", "Private"] | None = None
-    showOnline: bool | None = None
-    readReceipts: bool | None = None
-    allowCalls: bool | None = None
-    follow: Literal["Everyone", "Followers", "Following", "Approved connections", "Nobody"] | None = None
-    message: Literal["Everyone", "Followers", "Following", "Approved connections", "Nobody"] | None = None
-    call: Literal["Everyone", "Followers", "Following", "Approved connections", "Nobody"] | None = None
-    story: Literal["Everyone", "Followers", "Following", "Approved connections", "Nobody"] | None = None
-    comment: Literal["Everyone", "Followers", "Following", "Approved connections", "Nobody"] | None = None
-    mention: Literal["Everyone", "Followers", "Following", "Approved connections", "Nobody"] | None = None
-    onlineStatus: Literal["Everyone", "Followers", "Following", "Approved connections", "Nobody"] | None = None
-
-
 class NotificationPreferencesUpdate(BaseModel):
     messages: bool | None = None
     connections: bool | None = None

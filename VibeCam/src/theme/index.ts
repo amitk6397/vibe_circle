@@ -1,24 +1,24 @@
 export const colors = {
-  bg: '#F9F8FD',
-  surface: '#FFFFFF',
-  surfaceAlt: '#FFF0F5',
-  primary: '#D62976',
-  primaryDark: '#962FBF',
-  accent: '#FA7E1E',
-  text: '#1D1830',
-  muted: '#716B82',
-  border: '#F0DFE8',
-  success: '#20A875',
-  warning: '#E99528',
-  danger: '#DC3F5D',
-  info: '#2878D7',
-  dark: '#151126',
+  bg: '#242837',
+  surface: '#2E3347',
+  surfaceAlt: '#38405A',
+  primary: '#FF2D75',
+  primaryDark: '#8B5CF6',
+  accent: '#FF7A00',
+  text: '#EEF2FF',
+  muted: '#8892A4',
+  border: '#3D4460',
+  success: '#10B981',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  info: '#3B82F6',
+  dark: '#1A1D2E',
 };
 
 export const gradients = {
-  primary: ['#FEDA75', '#F77737', '#D62976', '#962FBF', '#4F5BD5'] as const,
-  warm: ['#FEDA75', '#F77737', '#E1306C', '#C13584'] as const,
-  support: ['#4F5BD5', '#833AB4', '#C13584', '#E1306C'] as const,
+  primary: ['#FF2D75', '#8B5CF6', '#4F46E5'] as const,
+  warm: ['#FF7A00', '#FF2D75', '#9333EA'] as const,
+  support: ['#3B82F6', '#8B5CF6', '#FF2D75'] as const,
 };
 
 export const spacing = { xs: 6, sm: 10, md: 16, lg: 24, xl: 32 };

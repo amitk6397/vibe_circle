@@ -6,6 +6,7 @@ import {
   FlatList,
   Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -22,6 +23,7 @@ import {
   Header,
   IconButton,
   PersonCard,
+  PersonGridCard,
   Pill,
   PostCard,
   Screen,
@@ -47,65 +49,7 @@ import { styles as sharedStyles } from '../../shared-views/styles';
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_WIDTH = (SCREEN_WIDTH - 20 * 2 - 10) / 2; // 2 columns with gap
 
-function PersonGridCard({ person, onPress }: { person: any; onPress: () => void }) {
-  const hasPhoto = !!person.avatarUrl;
-  const bgColor = person.avatarColor || '#5B5CE2';
-  const initial = (person.name || '?')[0].toUpperCase();
 
-  return (
-    <Pressable style={styles.gridCard} onPress={onPress}>
-      {/* Full-card image or gradient background */}
-      {hasPhoto ? (
-        <Image source={{ uri: person.avatarUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-      ) : (
-        <LinearGradient
-          colors={[bgColor, bgColor + 'AA']}
-          style={StyleSheet.absoluteFill}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-      )}
-
-      {/* Initials shown when no photo */}
-      {!hasPhoto && (
-        <View style={styles.gridInitialWrapper}>
-          <Text style={styles.gridInitial}>{initial}</Text>
-        </View>
-      )}
-
-      {/* Online indicator */}
-      {person.online && (
-        <View style={styles.onlineDot}>
-          <View style={styles.onlineDotInner} />
-        </View>
-      )}
-
-      {/* Bottom gradient overlay with user details */}
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.85)']}
-        style={styles.gridOverlay}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-      >
-        <Text style={styles.gridName} numberOfLines={1}>{person.name}</Text>
-        {person.city ? (
-          <View style={styles.gridDetailRow}>
-            <Ionicons name="location-outline" size={11} color="rgba(255,255,255,0.7)" />
-            <Text style={styles.gridDetailText} numberOfLines={1}>{person.city}</Text>
-          </View>
-        ) : null}
-        {/* Interest tags */}
-        <View style={styles.gridTags}>
-          {(person.interests || []).slice(0, 2).map((tag: string) => (
-            <View key={tag} style={styles.gridTag}>
-              <Text style={styles.gridTagText} numberOfLines={1}>{tag}</Text>
-            </View>
-          ))}
-        </View>
-      </LinearGradient>
-    </Pressable>
-  );
-}
 
 const getAbsoluteUri = (uri?: string) => {
   if (!uri) return undefined;
@@ -236,7 +180,7 @@ export function DiscoverScreen({ navigation }: any) {
   );
 
   return (
-    <Screen>
+    <Screen scroll={false} edges={['top', 'left', 'right']}>
       <View style={sharedStyles.topRow}>
         <View>
           <Text style={sharedStyles.eyebrow}>DISCOVER</Text>
@@ -260,118 +204,110 @@ export function DiscoverScreen({ navigation }: any) {
           )}
         </View>
       </View>
-      <SearchField value={query} onChangeText={setQuery} placeholder={`Search ${discoverTab}`} />
-      <View style={ui.wrap}>
-        <Pill
-          label="People"
-          selected={discoverTab === 'people'}
-          onPress={() => setDiscoverTab('people')}
-        />
-        <Pill
-          label="Communities"
-          selected={discoverTab === 'communities'}
-          onPress={() => setDiscoverTab('communities')}
-        />
-        <Pill
-          label="Posts"
-          selected={discoverTab === 'posts'}
-          onPress={() => setDiscoverTab('posts')}
-        />
-      </View>
-
-      {/* People — Photo Grid */}
-      {discoverTab === 'people' && (
-        <>
-          <Card style={sharedStyles.listRow}>
-            <Ionicons name="compass-outline" size={20} color={colors.primary} />
-            <View style={{ flex: 1 }}>
-              <Text style={sharedStyles.cardTitle}>{selectedPurpose} recommendations</Text>
-              <Text style={sharedStyles.smallMuted}>Filtered by your selected purpose.</Text>
-            </View>
-            <Pressable onPress={() => navigation.navigate('ChoosePurpose')}>
-              <Text style={sharedStyles.link}>Change</Text>
-            </Pressable>
-          </Card>
-          <Section title="People for you" />
-          {purposeLoading && <ChatSkeleton rows={2} />}
-          {!!purposeError && (
-            <EmptyState icon="cloud-offline-outline" title="Unable to load" text={purposeError} />
-          )}
-          {!purposeLoading && !purposeError && !people.length && (
-            <EmptyState title="No people found" text="Try another name or purpose." />
-          )}
-          {!purposeLoading && !purposeError && people.length > 0 && (
-            <FlatList
-              data={people}
-              keyExtractor={(p) => p.id}
-              numColumns={2}
-              scrollEnabled={false}
-              columnWrapperStyle={styles.gridRow}
-              contentContainerStyle={styles.gridContent}
-              renderItem={({ item }) => (
-                <PersonGridCard
-                  person={item}
-                  onPress={() => navigation.navigate('PublicProfile', { personId: item.id })}
-                />
-              )}
-            />
-          )}
-        </>
-      )}
-
-      {discoverTab === 'communities' && (
-        <>
-          <Section
-            title="Communities"
-            action="Create"
-            onAction={() => navigation.navigate('CreateCommunity')}
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 18, gap: 16 }}>
+        <SearchField value={query} onChangeText={setQuery} placeholder={`Search ${discoverTab}`} />
+        <View style={ui.wrap}>
+          <Pill
+            label="People"
+            selected={discoverTab === 'people'}
+            onPress={() => setDiscoverTab('people')}
           />
-          {!visibleCommunities.length && (
-            <EmptyState title="No communities found" text="Try another search or create one." />
-          )}
-          {visibleCommunities.length > 0 && (
-            <FlatList
-              data={visibleCommunities}
-              keyExtractor={(c) => c.id}
-              numColumns={2}
-              scrollEnabled={false}
-              columnWrapperStyle={styles.gridRow}
-              contentContainerStyle={styles.gridContent}
-              renderItem={({ item }) => (
-                <CommunityGridCard
-                  community={item}
-                  onPress={() => navigation.navigate('CommunityDetails', { communityId: item.id })}
-                />
-              )}
-            />
-          )}
-        </>
-      )}
-
-      {discoverTab === 'posts' && (
-        <>
-          <Section
-            title="Posts"
-            action="Create"
-            onAction={() => navigation.navigate('CreatePost')}
+          <Pill
+            label="Communities"
+            selected={discoverTab === 'communities'}
+            onPress={() => setDiscoverTab('communities')}
           />
-          {!visiblePosts.length && (
-            <EmptyState title="No posts found" text="Try another search or create a post." />
-          )}
-          {visiblePosts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              onPress={() => navigation.navigate('PostDetails', { postId: post.id })}
-              onAuthorPress={
-                post.authorId
-                  ? () => navigation.navigate('PublicProfile', { personId: post.authorId })
-                  : undefined
-              }
+          <Pill
+            label="Posts"
+            selected={discoverTab === 'posts'}
+            onPress={() => setDiscoverTab('posts')}
+          />
+        </View>
+
+        {/* People — Photo Grid */}
+        {discoverTab === 'people' && (
+          <>
+            <Section title="People for you" />
+            {purposeLoading && <ChatSkeleton rows={2} />}
+            {!!purposeError && (
+              <EmptyState icon="cloud-offline-outline" title="Unable to load" text={purposeError} />
+            )}
+            {!purposeLoading && !purposeError && !people.length && (
+              <EmptyState title="No people found" text="Try another name or purpose." />
+            )}
+            {!purposeLoading && !purposeError && people.length > 0 && (
+              <FlatList
+                data={people}
+                keyExtractor={(p) => p.id}
+                numColumns={2}
+                scrollEnabled={false}
+                columnWrapperStyle={styles.gridRow}
+                contentContainerStyle={styles.gridContent}
+                renderItem={({ item }) => (
+                  <PersonGridCard
+                    person={item}
+                    onPress={() => navigation.navigate('PublicProfile', { personId: item.id })}
+                  />
+                )}
+              />
+            )}
+          </>
+        )}
+
+        {discoverTab === 'communities' && (
+          <>
+            <Section
+              title="Communities"
+              action="Create"
+              onAction={() => navigation.navigate('CreateCommunity')}
             />
-          ))}
-        </>
-      )}
+            {!visibleCommunities.length && (
+              <EmptyState title="No communities found" text="Try another search or create one." />
+            )}
+            {visibleCommunities.length > 0 && (
+              <FlatList
+                data={visibleCommunities}
+                keyExtractor={(c) => c.id}
+                numColumns={2}
+                scrollEnabled={false}
+                columnWrapperStyle={styles.gridRow}
+                contentContainerStyle={styles.gridContent}
+                renderItem={({ item }) => (
+                  <CommunityGridCard
+                    community={item}
+                    onPress={() => navigation.navigate('CommunityDetails', { communityId: item.id })}
+                  />
+                )}
+              />
+            )}
+          </>
+        )}
+
+        {discoverTab === 'posts' && (
+          <>
+            <Section
+              title="Posts"
+              action="Create"
+              onAction={() => navigation.navigate('CreatePost')}
+            />
+            {!visiblePosts.length && (
+              <EmptyState title="No posts found" text="Try another search or create a post." />
+            )}
+            {visiblePosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                onPress={() => navigation.navigate('PostDetails', { postId: post.id })}
+                onAuthorPress={
+                  post.authorId
+                    ? () => navigation.navigate('PublicProfile', { personId: post.authorId })
+                    : undefined
+                }
+              />
+            ))}
+          </>
+        )}
+      </ScrollView>
     </Screen>
   );
 }
@@ -428,7 +364,7 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,

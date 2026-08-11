@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, FlatList, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { EmptyState, Header, PersonCard, Screen, ui } from '../../../components/ui';
+import { EmptyState, Header, PersonGridCard, Screen } from '../../../components/ui';
 import { discoveryApi } from '../../../services/api';
 import { Person } from '../../../types';
 
@@ -25,20 +25,13 @@ export function RecommendedPeopleScreen({ navigation }: any) {
           languages: item.languages,
           interests: item.interests,
           online: item.is_online,
+          avatarUrl: item.avatar_url || null,
           avatarColor: colour[index % colour.length],
           conversationTopics: item.conversation_topics,
           performanceRating: item.performance_rating,
           reviewCount: item.review_count,
           completedSessions: item.completed_sessions,
           performanceTier: item.performance_tier,
-          recommendationReasons: [
-            ...(item.performance_tier === 'top_performer' ? ['Top performer'] : []),
-            ...(item.review_count
-              ? [`${item.performance_rating?.toFixed(1)} rating · ${item.review_count} reviews`]
-              : []),
-            ...(item.is_online ? ['Available now'] : []),
-            ...(!item.review_count && !item.is_online ? ['New user'] : []),
-          ],
         })),
       );
     } catch (error: any) {
@@ -53,42 +46,39 @@ export function RecommendedPeopleScreen({ navigation }: any) {
     }, [load]),
   );
 
-  const topPerformers = people.filter((person) => person.performanceTier === 'top_performer');
-  const otherRecommendations = people.filter(
-    (person) => person.performanceTier !== 'top_performer',
-  );
-  const renderPerson = (person: Person) => (
-    <View key={person.id}>
-      <PersonCard
-        person={person}
-        onPress={() => navigation.navigate('PublicProfile', { personId: person.id })}
-      />
-      {!!person.recommendationReasons?.length && (
-        <Text style={[ui.muted, { marginTop: -12, marginLeft: 14 }]}>
-          {person.recommendationReasons.join(' · ')}
-        </Text>
-      )}
-    </View>
-  );
-
   return (
-    <Screen>
+    <Screen scroll={false}>
       <Header
         title="Recommended people"
-        subtitle="Review performance, interests, topics, and availability"
+        subtitle="Top recommendations based on your preferences"
         onBack={() => navigation.goBack()}
       />
-      {!!topPerformers.length && <Text style={ui.h2}>Top performers</Text>}
-      {topPerformers.map(renderPerson)}
-      {!!otherRecommendations.length && <Text style={ui.h2}>Other recommendations</Text>}
-      {otherRecommendations.map(renderPerson)}
-      {!loading && !people.length && (
-        <EmptyState
-          icon="people-outline"
-          title="No recommendations yet"
-          text="Add interests and conversation topics to receive relevant people."
-        />
-      )}
+      <View style={{ flex: 1, padding: 18, paddingTop: 12, gap: 16 }}>
+        {people.length > 0 ? (
+          <FlatList
+            data={people}
+            keyExtractor={(p) => p.id}
+            numColumns={2}
+            columnWrapperStyle={{ gap: 10 }}
+            contentContainerStyle={{ gap: 10, paddingBottom: 20 }}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <PersonGridCard
+                person={item}
+                onPress={() => navigation.navigate('PublicProfile', { personId: item.id })}
+              />
+            )}
+          />
+        ) : (
+          !loading && (
+            <EmptyState
+              icon="people-outline"
+              title="No recommendations yet"
+              text="Add interests and conversation topics to receive relevant people."
+            />
+          )
+        )}
+      </View>
     </Screen>
   );
 }

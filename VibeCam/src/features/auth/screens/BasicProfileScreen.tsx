@@ -189,10 +189,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 8,
   },
-  error: { color: colors.danger, backgroundColor: '#FFF0F2', padding: 12, borderRadius: 12 },
+  error: { color: colors.danger, backgroundColor: 'rgba(239,68,68,0.12)', padding: 12, borderRadius: 12 },
   legal: { color: colors.muted, fontSize: 11, lineHeight: 17, textAlign: 'center' },
   notice: {
-    backgroundColor: '#EBFAF4',
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 14,
     padding: 14,
     flexDirection: 'row',
