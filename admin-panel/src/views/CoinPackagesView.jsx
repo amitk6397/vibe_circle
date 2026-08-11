@@ -1,0 +1,71 @@
+import { useState } from 'react';
+import DataTable from '../components/DataTable';
+import Badge from '../components/Badge';
+import Modal from '../components/Modal';
+import { useCommerce } from '../viewmodels/useCommerce';
+
+const EMPTY_PKG = { name: '', purchased_coins: 0, bonus_coins: 0, price_minor: 0, currency: 'INR', active: true };
+
+export default function CoinPackagesView() {
+  const { packages, loading, error, createPackage, updatePackage } = useCommerce();
+  const [modal, setModal] = useState(null);
+  const [form, setForm] = useState(EMPTY_PKG);
+  const [saving, setSaving] = useState(false);
+
+  const openCreate = () => { setForm(EMPTY_PKG); setModal({ mode: 'create' }); };
+  const openEdit = (pkg) => { setForm({ ...pkg }); setModal({ mode: 'edit', id: pkg.id }); };
+
+  const handleSave = async () => {
+    setSaving(true);
+    const ok = modal.mode === 'create' ? await createPackage(form) : await updatePackage(modal.id, form);
+    if (ok) setModal(null);
+    setSaving(false);
+  };
+
+  const columns = [
+    { key: 'name', label: 'Package', render: (row) => <span style={{ fontWeight: 600 }}>{row.name}</span> },
+    { key: 'purchased_coins', label: 'Coins', width: '100px', render: (row) => <span style={{ color: 'var(--yellow)', fontWeight: 700 }}>🪙 {row.purchased_coins}</span> },
+    { key: 'bonus_coins', label: 'Bonus', width: '100px', render: (row) => row.bonus_coins ? <span style={{ color: 'var(--green)' }}>+{row.bonus_coins}</span> : <span className="text-muted">—</span> },
+    { key: 'price_minor', label: 'Price', width: '100px', render: (row) => <span style={{ fontWeight: 700, color: 'var(--cyan)' }}>₹{(row.price_minor / 100).toFixed(0)}</span> },
+    { key: 'active', label: 'Active', width: '80px', render: (row) => <Badge value={String(row.active)} /> },
+    {
+      key: 'actions', label: 'Actions', width: '100px',
+      render: (row) => <button className="btn btn--ghost btn--sm" onClick={() => openEdit(row)}>✏️ Edit</button>,
+    },
+  ];
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Coin Packages</h2>
+        <button className="btn btn--primary" onClick={openCreate}>+ New Package</button>
+      </div>
+      {error && <div className="alert alert--error">⚠️ {error}</div>}
+      <DataTable columns={columns} rows={packages} loading={loading} emptyMsg="No coin packages found." />
+
+      {modal && (
+        <Modal title={modal.mode === 'create' ? 'Create Coin Package' : 'Edit Package'} onClose={() => setModal(null)} size="sm">
+          <div className="form-group"><label className="form-label">Package Name</label><input className="form-input" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} /></div>
+          <div className="form-row">
+            <div className="form-group"><label className="form-label">Purchased Coins</label><input className="form-input" type="number" value={form.purchased_coins} onChange={(e) => setForm(p => ({ ...p, purchased_coins: +e.target.value }))} /></div>
+            <div className="form-group"><label className="form-label">Bonus Coins</label><input className="form-input" type="number" value={form.bonus_coins} onChange={(e) => setForm(p => ({ ...p, bonus_coins: +e.target.value }))} /></div>
+          </div>
+          <div className="form-row">
+            <div className="form-group"><label className="form-label">Price (paise)</label><input className="form-input" type="number" value={form.price_minor} onChange={(e) => setForm(p => ({ ...p, price_minor: +e.target.value }))} /></div>
+            <div className="form-group"><label className="form-label">Currency</label><input className="form-input" value={form.currency} onChange={(e) => setForm(p => ({ ...p, currency: e.target.value }))} /></div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <input type="checkbox" id="pkg_active" checked={form.active} onChange={(e) => setForm(p => ({ ...p, active: e.target.checked }))} />
+            <label htmlFor="pkg_active" className="form-label" style={{ marginBottom: 0 }}>Active</label>
+          </div>
+          <div className="form-actions">
+            <button className="btn btn--ghost" onClick={() => setModal(null)}>Cancel</button>
+            <button className="btn btn--primary" onClick={handleSave} disabled={saving || !form.name}>
+              {saving ? 'Saving…' : 'Save Package'}
+            </button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
