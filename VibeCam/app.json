@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "VibeCircle",
+    "slug": "vibecircle",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow VibeCircle to select photos for messages and your profile."
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#6C63FF",
+          "defaultChannel": "default"
+        }
+      ],
+      "expo-font"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vibecircle.app",
+      "infoPlist": {
+        "UIBackgroundModes": ["audio", "remote-notification"],
+        "NSMicrophoneUsageDescription": "Allow VibeCircle to use your microphone for secure calls.",
+        "NSCameraUsageDescription": "Allow VibeCircle to use your camera for video calls."
+      }
+    },
+    "android": {
+      "softwareKeyboardLayoutMode": "resize",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.BLUETOOTH_CONNECT"
+      ],
+      "package": "com.vibecircle.app",
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "976b294b-3218-48a6-847a-f60f4ac25719"
+      }
+    }
+  }
+}

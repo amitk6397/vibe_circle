@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "632409363417",
+    "project_id": "vibecircle-dbf8a",
+    "storage_bucket": "vibecircle-dbf8a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:632409363417:android:96521c6b9a12819e86ffc8",
+        "android_client_info": {
+          "package_name": "com.vibecircle.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKCtQBGAs3GscUe7ONHKVMw5QVM_f4iNo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

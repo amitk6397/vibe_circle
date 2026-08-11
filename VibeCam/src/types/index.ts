@@ -1,0 +1,270 @@
+export type Purpose = 'Talk' | 'Friends' | 'Advice' | 'Learn' | 'Support' | 'Fun' | 'Local';
+export type Person = {
+  id: string;
+  name: string;
+  age: number;
+  username: string;
+  bio: string;
+  city?: string;
+  languages: string[];
+  interests: string[];
+  online: boolean;
+  trusted?: boolean;
+  avatarColor: string;
+  avatarUrl?: string | null;
+  conversationTopics?: string[];
+  recommendationReasons?: string[];
+  performanceRating?: number;
+  reviewCount?: number;
+  completedSessions?: number;
+  performanceTier?: 'top_performer' | 'recommended' | 'new';
+  responseRate?: number;
+};
+
+export type PrivacyAudience =
+  'Everyone' | 'Followers' | 'Following' | 'Approved connections' | 'Nobody';
+
+export type UserPrivacySettings = {
+  profileVisibility: 'Public' | 'Private';
+  follow: PrivacyAudience;
+  message: PrivacyAudience;
+  call: PrivacyAudience;
+  story: PrivacyAudience;
+  comment: PrivacyAudience;
+  mention: PrivacyAudience;
+  onlineStatus: PrivacyAudience;
+};
+export type Community = {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  members: number;
+  joined?: boolean;
+  color: string;
+  privacy?: 'public' | 'request' | 'private' | 'premium';
+  premiumPrice?: number;
+  rules?: string[];
+  logoUrl?: string;
+  coverUrl?: string;
+  tags?: string[];
+  location?: string;
+  language?: string;
+  isOwner?: boolean;
+  joinPending?: boolean;
+  kind?: 'community' | 'circle';
+  maxMembers?: number;
+};
+
+export type Comment = {
+  id: string;
+  postId: string;
+  author: string;
+  authorUsername?: string;
+  body: string;
+  time: string;
+  parentId?: string;
+  likes?: number;
+  liked?: boolean;
+  mine?: boolean;
+};
+export type Post = {
+  id: string;
+  author: string;
+  authorId?: string;
+  authorUsername?: string;
+  mine?: boolean;
+  community: string;
+  body: string;
+  likes: number;
+  comments: number;
+  anonymous?: boolean;
+  authorAvatarUrl?: string | null;
+  liked?: boolean;
+  saved?: boolean;
+  postType?: 'Text' | 'Question' | 'Poll' | 'Image';
+  pollOptions?: string[];
+  pollResults?: Record<string, number>;
+  myVote?: string;
+  attachment?: LocalAttachment;
+  createdAt?: string;
+  visibility?: 'public' | 'private';
+  coinPrice?: number;
+  locked?: boolean;
+  // Tipping
+  tipCount?: number;
+  tipTotal?: number;
+  // Boosting
+  isBoosted?: boolean;
+  boostedUntil?: string | null;
+  boostCost?: number;
+  // Bounty
+  bountyAmount?: number;
+  bountyStatus?: 'none' | 'open' | 'awarded' | 'refunded';
+  bountyWinnerCommentId?: string | null;
+  gifts?: any[];
+};
+export type Chat = {
+  id: string;
+  personId: string;
+  name: string;
+  preview: string;
+  time: string;
+  unread: number;
+  online?: boolean;
+  avatarUrl?: string | null;
+};
+export type Message = {
+  id: string;
+  chatId: string;
+  text: string;
+  mine: boolean;
+  time: string;
+  status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
+  attachment?: LocalAttachment;
+  replyToId?: string;
+  replyPreview?: string;
+  reactions?: Record<string, string>;
+  deleted?: boolean;
+  safetyFlags?: string[];
+};
+
+export type LocalAttachment = {
+  id: string;
+  kind: 'image' | 'file';
+  uri: string;
+  name: string;
+  mimeType?: string;
+  size?: number;
+};
+
+export type CommunityMessage = {
+  id: string;
+  communityId: string;
+  authorId: string;
+  author: string;
+  text: string;
+  time: string;
+  mine?: boolean;
+  role?: 'owner' | 'moderator' | 'member';
+  attachment?: LocalAttachment;
+};
+
+export type RootStackParamList = {
+  Splash: undefined;
+  Login: undefined;
+  Register: undefined;
+  VerifyEmail: { email?: string } | undefined;
+  ForgotPassword: undefined;
+  BasicProfile: undefined;
+  Main: undefined;
+  ChoosePurpose: undefined;
+  GlobalSearch: undefined;
+  DiscoverPeople: undefined;
+  DiscoverCommunities: undefined;
+  RecommendedPeople: undefined;
+  PublicProfile: { personId: string };
+  SearchFilters: undefined;
+  ConnectSetup: undefined;
+  SearchingMatch: {
+    purpose: Purpose;
+    anonymous: boolean;
+    language: string;
+    minAge: number;
+    maxAge: number;
+    matchId?: string;
+    sessionMinutes: 10 | 20;
+  };
+  MatchFound: {
+    matchId: string;
+    personId: string;
+    anonymous: boolean;
+    score: number;
+    reasons: string[];
+    purpose: Purpose;
+    language: string;
+    alreadyAccepted?: boolean;
+    sessionMinutes: number;
+  };
+  ConnectionRequest: undefined;
+  MessageRequests: undefined;
+  PaidSessions: undefined;
+  ArchivedChats: undefined;
+  NewMessageRequest: { personId: string; name: string; chatPrice?: number };
+  SubscriptionPlans: { source?: 'chat_limit' | 'profile' | 'settings' } | undefined;
+  PlanDetails: { planId: string };
+  ActiveSubscription: undefined;
+  PurchaseConfirmation: { planId: string };
+  PaymentSuccess: { kind: 'subscription' | 'coins' };
+  PaymentFailure: { message?: string };
+  SubscriptionHistory: undefined;
+  Wallet: undefined;
+  BuyCoins: undefined;
+  TransactionHistory: undefined;
+  UserPerformance: { userId: string };
+  EarningsDashboard: undefined;
+  EarningsWallet: undefined;
+  Withdrawal: undefined;
+  PremiumCommunity: { communityId: string };
+  SessionRating: { sessionId: string; userId: string; sessionType: 'chat' | 'call' };
+  CommunityFeed: undefined;
+  SessionFeedback: { matchId?: string; personId?: string } | undefined;
+  PrivateChat: {
+    chatId: string;
+    name: string;
+    personId?: string;
+    matchId?: string;
+    anonymous?: boolean;
+    sessionEndsAt?: string;
+  };
+  MediaPreview: { attachment?: LocalAttachment } | undefined;
+  ChatInfo: { chatId: string; name: string };
+  AudioCall: { name: string; callId: string; chatId: string; personId?: string };
+  VideoCall: { name: string; callId: string; chatId: string; personId?: string };
+  IncomingCall: {
+    name: string;
+    callId: string;
+    chatId: string;
+    personId?: string;
+    callType: 'audio' | 'video';
+  };
+  CreatePost: { communityId?: string } | undefined;
+  PostDetails: { postId: string };
+  CommunityDetails: { communityId: string };
+  CommunityChat: { communityId: string };
+  CommunityMembers: { communityId: string };
+  CommunityJoinRequests: { communityId: string };
+  CreateCommunity: undefined;
+  MyCommunities: undefined;
+  PrivateCircles: undefined;
+  CreateCircle: undefined;
+  CircleInvites: undefined;
+  InviteCircleMembers: { communityId: string };
+  VibeAvailability: undefined;
+  MyCreations: undefined;
+  Notifications: undefined;
+  MyProfile: undefined;
+  EditProfile: undefined;
+  InterestsLanguages: undefined;
+  MyActivity: undefined;
+  Connections: undefined;
+  PrivacySettings: undefined;
+  Reports: undefined;
+  BlockedUsers: undefined;
+  SettingsSupport: undefined;
+  SupportArticle: { title: string; body: string; icon: string };
+  AccountManagement: undefined;
+  DailyRewards: undefined;
+  Referral: undefined;
+  GoLive: undefined;
+  WatchStream: { streamId: string; title: string };
+  Connect: undefined;
+};
+
+export type TabParamList = {
+  Home: undefined;
+  Discover: undefined;
+  Live: undefined;
+  Inbox: undefined;
+  Profile: undefined;
+};
