@@ -94,12 +94,18 @@ export function CreatePostScreen({ navigation, route }: any) {
   const [postPriceMaxCoins, setPostPriceMaxCoins] = useState(500);
   const [customPrice, setCustomPrice] = useState('');
   const [bountyAmount, setBountyAmount] = useState('');
+  const [postDeductionEnabled, setPostDeductionEnabled] = useState(false);
+  const [publicPostPriceCoins, setPublicPostPriceCoins] = useState(0);
+  const [privatePostPriceCoins, setPrivatePostPriceCoins] = useState(0);
   const profile = useAppStore((state) => state.profile);
   useEffect(() => {
     void walletApi.pricing().then(({ data }) => {
       setPrivatePostCoins(data.privatePostCoins);
       if (data.postPriceMinCoins) setPostPriceMinCoins(data.postPriceMinCoins);
       if (data.postPriceMaxCoins) setPostPriceMaxCoins(data.postPriceMaxCoins);
+      if (data.postDeductionEnabled) setPostDeductionEnabled(data.postDeductionEnabled);
+      if (data.publicPostPriceCoins !== undefined) setPublicPostPriceCoins(data.publicPostPriceCoins);
+      if (data.privatePostPriceCoins !== undefined) setPrivatePostPriceCoins(data.privatePostPriceCoins);
     });
   }, []);
   const community = useAppStore((state) =>
@@ -263,6 +269,16 @@ export function CreatePostScreen({ navigation, route }: any) {
             placeholderTextColor={colors.muted}
             style={[styles.postComposerInput, { borderWidth: 1, borderColor: colors.border, paddingHorizontal: 10, marginTop: 4, height: 45, borderRadius: 8 }]}
           />
+        </Card>
+      )}
+      {postDeductionEnabled && (
+        <Card style={{ padding: 12, marginVertical: 8, borderColor: colors.border, borderWidth: 1 }}>
+          <Text style={[ui.body, { fontWeight: '600', color: '#E79B32', marginBottom: 2 }]}>
+            Post Creation Fee: {visibility === 'private' ? privatePostPriceCoins : publicPostPriceCoins} coins
+          </Text>
+          <Text style={[ui.muted, { fontSize: 12 }]}>
+            Publishing a {visibility} post will deduct {visibility === 'private' ? privatePostPriceCoins : publicPostPriceCoins} coins from your wallet balance.
+          </Text>
         </Card>
       )}
       <Button

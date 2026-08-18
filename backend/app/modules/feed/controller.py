@@ -160,6 +160,38 @@ def create(payload: PostCreate, db: DbSession, user: CurrentUser):
     db.add(item)
     db.flush()
 
+    # Deduct coins for posting if enabled
+    price = 0
+    if settings.post_deduction_enabled:
+        if payload.visibility == "private":
+            price = settings.private_post_price_coins
+        else:
+            price = settings.public_post_price_coins
+
+    if price > 0:
+        try:
+            commerce_service.spend_coins(db, user.id, price, "post_charge", "post", item.id)
+        except Exception as exc:
+            db.rollback()
+            raise AppError(402, "insufficient_coins_for_post", "You do not have enough coins to submit this post.") from exc
+
+        # Record admin earnings
+        from app.modules.creators.models import CreatorTransaction
+        admin_user = db.scalar(select(User).where(User.role == "admin"))
+        admin_id = admin_user.id if admin_user else "admin"
+
+        db.add(CreatorTransaction(
+            creator_id=admin_id,
+            transaction_type="post_charge",
+            gross_amount=price,
+            commission_amount=price,
+            creator_amount=0,
+            status="available",
+            reference_type="post",
+            reference_id=item.id,
+            settles_at=datetime.now(UTC)
+        ))
+
     if bounty_amount is not None and bounty_amount > 0:
         try:
             held_bonus, held_purchased = commerce_service.hold_coins(

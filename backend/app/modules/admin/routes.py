@@ -35,6 +35,7 @@ router.add_api_route("/users/{user_id}", controller.delete_user, methods=["DELET
 router.add_api_route("/communities", controller.list_communities, methods=["GET"])
 router.add_api_route("/communities/{community_id}", controller.update_community, methods=["PATCH"])
 router.add_api_route("/communities/{community_id}", controller.delete_community, methods=["DELETE"])
+router.add_api_route("/communities/{community_id}/members", controller.list_community_members, methods=["GET"])
 
 # ── Subscription Plans ────────────────────────────────────────────────────────
 router.add_api_route("/subscription-plans", controller.list_subscription_plans, methods=["GET"])
@@ -46,6 +47,13 @@ router.add_api_route("/subscription-plans/{plan_id}", controller.delete_subscrip
 router.add_api_route("/coin-packages", controller.list_coin_packages, methods=["GET"])
 router.add_api_route("/coin-packages", controller.create_coin_package, methods=["POST"], status_code=201)
 router.add_api_route("/coin-packages/{package_id}", controller.update_coin_package, methods=["PATCH"])
+
+
+# ── Special Offers ────────────────────────────────────────────────────────────
+router.add_api_route("/offers", controller.list_offers, methods=["GET"])
+router.add_api_route("/offers", controller.create_offer, methods=["POST"], status_code=201)
+router.add_api_route("/offers/{offer_id}", controller.update_offer, methods=["PATCH"])
+router.add_api_route("/offers/{offer_id}", controller.delete_offer, methods=["DELETE"])
 
 
 # ── Withdrawals ───────────────────────────────────────────────────────────────

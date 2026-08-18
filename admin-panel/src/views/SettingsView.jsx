@@ -16,39 +16,25 @@ const SECTIONS = [
     ],
   },
   {
-    title: '🔒 Private Content Pricing',
+    title: '📢 Post Creation Fees',
     fields: [
-      { key: 'privatePostCoinPrice',   label: 'Private Post Price (Default)',      type: 'number', unit: 'coins' },
-      { key: 'privateCommunityCoins',  label: 'Private Community Price (Default)', type: 'number', unit: 'coins' },
-      { key: 'postPriceMinCoins',      label: 'Minimum Post Price',                type: 'number', unit: 'coins' },
-      { key: 'postPriceMaxCoins',      label: 'Maximum Post Price',                type: 'number', unit: 'coins' },
-      { key: 'communityPriceMinCoins', label: 'Min VIP Community Price',           type: 'number', unit: 'coins' },
-      { key: 'communityPriceMaxCoins', label: 'Max VIP Community Price',           type: 'number', unit: 'coins' },
-      { key: 'communitySubscriptionDays', label: 'Community Subscription Duration', type: 'number', unit: 'days' },
+      { key: 'postDeductionEnabled',  label: 'Post Coin Charge Switch', type: 'select' },
+      { key: 'publicPostPriceCoins',  label: 'Public Post creation charge', type: 'number', unit: 'coins' },
+      { key: 'privatePostPriceCoins', label: 'Private Post creation charge', type: 'number', unit: 'coins' },
     ],
   },
   {
-    title: '💬 Conversation Limits',
+    title: '🔒 Private Content Pricing (Defaults)',
     fields: [
-      { key: 'freeConversationsPerWeek',   label: 'Free Conversations / Week',   type: 'number', unit: 'convs' },
-      { key: 'freeMessagesPerConversation',label: 'Free Messages / Conversation',type: 'number', unit: 'msgs' },
-      { key: 'messageRequestsPerDay',      label: 'Message Requests / Day',      type: 'number', unit: 'reqs' },
-      { key: 'messageRequestExpiryHours',  label: 'Message Request Expiry',      type: 'number', unit: 'hrs' },
-    ],
-  },
-  {
-    title: '📞 Call Settings',
-    fields: [
-      { key: 'callGracePeriodSeconds', label: 'Call Grace Period',     type: 'number', unit: 'secs' },
-      { key: 'callRingTimeoutSeconds', label: 'Call Ring Timeout',     type: 'number', unit: 'secs' },
-      { key: 'callJoinTimeoutSeconds', label: 'Call Join Timeout',     type: 'number', unit: 'secs' },
+      { key: 'privatePostCoinPrice',   label: 'Private Post Unlock Price (Default)',      type: 'number', unit: 'coins' },
+      { key: 'privateCommunityCoins',  label: 'Private Community VIP Join Price (Default)', type: 'number', unit: 'coins' },
     ],
   },
   {
     title: '🏦 Platform Financials',
     fields: [
-      { key: 'platformCommissionPercent', label: 'Platform Commission', type: 'number', unit: '%' },
-      { key: 'creatorSettlementDays',     label: 'Creator Settlement',  type: 'number', unit: 'days' },
+      { key: 'platformCommissionPercent', label: 'Platform Commission Cut', type: 'number', unit: '%' },
+      { key: 'creatorSettlementDays',     label: 'Creator Settlement Duration',  type: 'number', unit: 'days' },
     ],
   },
   {
@@ -57,14 +43,6 @@ const SECTIONS = [
       { key: 'dailyLoginRewardSchedule', label: 'Daily Rewards Schedule (Day 1–7)', type: 'text', unit: 'comma-sep' },
       { key: 'referralInviterCoins',     label: 'Referral Reward (Inviter)',        type: 'number', unit: 'coins' },
       { key: 'referralInviteeCoins',     label: 'Referral Bonus (Invitee)',         type: 'number', unit: 'coins' },
-    ],
-  },
-  {
-    title: '🚀 Post Boosting & Bounty',
-    fields: [
-      { key: 'postBoostCoins',  label: 'Post Boosting Cost',     type: 'number', unit: 'coins' },
-      { key: 'postBoostHours',  label: 'Post Boosting Duration', type: 'number', unit: 'hours' },
-      { key: 'bountyMinCoins',  label: 'Minimum Bounty Coins',  type: 'number', unit: 'coins' },
     ],
   },
 ];
@@ -164,15 +142,28 @@ export default function SettingsView() {
               <div className="card" key={key} style={{ padding: '14px 18px' }}>
                 <label className="form-label" htmlFor={key}>{label}</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <input
-                    id={key}
-                    type={type}
-                    className="form-input"
-                    style={{ flex: 1 }}
-                    value={form[key] ?? ''}
-                    onChange={e => setField(key, type === 'number' ? +e.target.value : e.target.value)}
-                    min={0}
-                  />
+                  {type === 'select' ? (
+                    <select
+                      id={key}
+                      className="form-input"
+                      style={{ flex: 1 }}
+                      value={String(form[key] ?? 'false')}
+                      onChange={e => setField(key, e.target.value === 'true')}
+                    >
+                      <option value="true">Enabled</option>
+                      <option value="false">Disabled</option>
+                    </select>
+                  ) : (
+                    <input
+                      id={key}
+                      type={type}
+                      className="form-input"
+                      style={{ flex: 1 }}
+                      value={form[key] ?? ''}
+                      onChange={e => setField(key, type === 'number' ? +e.target.value : e.target.value)}
+                      min={0}
+                    />
+                  )}
                   {unit && <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>{unit}</span>}
                 </div>
               </div>
@@ -184,46 +175,11 @@ export default function SettingsView() {
       {/* ── List fields (full width) ──────────────────────────────────── */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: 10, letterSpacing: '0.03em' }}>
-          ⏱️ Duration Options & Safety
+          🚫 Safety & Moderation
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          {/* Call Duration Options */}
-          <div className="card" style={{ padding: '14px 18px' }}>
-            <label className="form-label" htmlFor="callDurationOptions">
-              Call Duration Options
-              <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '0.75rem', marginLeft: 6 }}>(minutes, comma-separated)</span>
-            </label>
-            <input
-              id="callDurationOptions"
-              type="text"
-              className="form-input"
-              value={form.callDurationOptions ?? ''}
-              onChange={e => setField('callDurationOptions', e.target.value)}
-              placeholder="5, 10, 15, 30"
-            />
-          </div>
-
-          {/* Paid Chat Duration Options */}
-          <div className="card" style={{ padding: '14px 18px' }}>
-            <label className="form-label" htmlFor="paidChatDurationOptions">
-              Paid Chat Duration Options
-              <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '0.75rem', marginLeft: 6 }}>(minutes, comma-separated)</span>
-            </label>
-            <input
-              id="paidChatDurationOptions"
-              type="text"
-              className="form-input"
-              value={form.paidChatDurationOptions ?? ''}
-              onChange={e => setField('paidChatDurationOptions', e.target.value)}
-              placeholder="5, 10, 15, 30"
-            />
-          </div>
-        </div>
-
-        {/* Restricted Words - full width */}
-        <div className="card" style={{ padding: '14px 18px', marginTop: 12 }}>
+        <div className="card" style={{ padding: '14px 18px' }}>
           <label className="form-label" htmlFor="restrictedWords">
-            🚫 Restricted Words / Phrases
+            Restricted Words / Phrases
             <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '0.75rem', marginLeft: 6 }}>(comma-separated)</span>
           </label>
           <textarea
@@ -291,16 +247,16 @@ export default function SettingsView() {
         <div className="card__title">ℹ️ Current Configuration Summary</div>
         <div className="info-grid">
           <div className="info-item">
-            <span className="info-item__label">Call Durations</span>
-            <span className="info-item__value">{String(form.callDurationOptions || '')} min</span>
+            <span className="info-item__label">Post Coin Charge</span>
+            <span className="info-item__value">{form.postDeductionEnabled ? '✅ Enabled' : '❌ Disabled'}</span>
           </div>
           <div className="info-item">
-            <span className="info-item__label">Paid Chat Durations</span>
-            <span className="info-item__value">{String(form.paidChatDurationOptions || '')} min</span>
+            <span className="info-item__label">Public Post Price</span>
+            <span className="info-item__value">{form.publicPostPriceCoins ?? 0} coins</span>
           </div>
           <div className="info-item">
-            <span className="info-item__label">Grace Period</span>
-            <span className="info-item__value">{form.callGracePeriodSeconds ?? '—'}s</span>
+            <span className="info-item__label">Private Post Price</span>
+            <span className="info-item__value">{form.privatePostPriceCoins ?? 0} coins</span>
           </div>
           <div className="info-item">
             <span className="info-item__label">Restricted Words</span>
@@ -311,10 +267,6 @@ export default function SettingsView() {
           <div className="info-item">
             <span className="info-item__label">Dummy Payments</span>
             <span className="info-item__value">{form.dummyPaymentsEnabled ? '✅ Enabled' : '❌ Disabled'}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-item__label">Msg Request Expiry</span>
-            <span className="info-item__value">{form.messageRequestExpiryHours ?? '—'}h</span>
           </div>
         </div>
       </div>

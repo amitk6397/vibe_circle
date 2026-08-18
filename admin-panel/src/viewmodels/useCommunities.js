@@ -49,5 +49,15 @@ export function useCommunities() {
     fetchCommunities(newFilters);
   }, [fetchCommunities]);
 
-  return { communities, loading, error, filters, applyFilters, fetchCommunities, updateCommunity, deleteCommunity };
+  const fetchCommunityMembers = useCallback(async (id) => {
+    try {
+      const res = await communitiesService.members(id);
+      return res.data;
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to load community members.');
+      return [];
+    }
+  }, []);
+
+  return { communities, loading, error, filters, applyFilters, fetchCommunities, updateCommunity, deleteCommunity, fetchCommunityMembers };
 }

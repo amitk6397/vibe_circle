@@ -65,6 +65,11 @@ class Settings(BaseSettings):
     # Ask & Earn bounty
     bounty_min_coins: int = 10
 
+    # Post creation charging
+    post_deduction_enabled: bool = False
+    public_post_price_coins: int = 0
+    private_post_price_coins: int = 0
+
     model_config = SettingsConfigDict(env_file=BASE_DIR / ".env", extra="ignore")
 
     @field_validator("allowed_origins", mode="before")

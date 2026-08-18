@@ -61,7 +61,61 @@ def subscription_history(db: DbSession, user: CurrentUser, before: str | None = 
 
 
 def coin_packages(db: DbSession):
-    return [{"id": item.id, "name": item.name, "purchasedCoins": item.purchased_coins, "bonusCoins": item.bonus_coins, "price": item.price_minor / 100, "currency": item.currency} for item in db.scalars(select(CoinPackage).where(CoinPackage.active.is_(True)).order_by(CoinPackage.price_minor))]
+    return [
+        {
+            "id": item.id,
+            "name": item.name,
+            "purchasedCoins": item.purchased_coins,
+            "bonusCoins": item.bonus_coins,
+            "price": item.price_minor / 100,
+            "currency": item.currency,
+            "discountPercentage": item.discount_percentage,
+            "badge": item.badge,
+            "isPopular": item.is_popular,
+            "description": item.description,
+        }
+        for item in db.scalars(select(CoinPackage).where(CoinPackage.active.is_(True)).order_by(CoinPackage.price_minor))
+    ]
+
+
+def list_active_offers(db: DbSession):
+    from app.modules.commerce.models import SpecialOffer
+    from datetime import datetime, UTC
+    now = datetime.now(UTC)
+    
+    stmt = select(SpecialOffer).where(SpecialOffer.active.is_(True))
+    rows = db.scalars(stmt).all()
+    
+    active_offers = []
+    for r in rows:
+        # Check start date if present
+        if r.starts_at and r.starts_at.tzinfo:
+            if r.starts_at > now:
+                continue
+        elif r.starts_at and not r.starts_at.tzinfo:
+            if r.starts_at > now.replace(tzinfo=None):
+                continue
+                
+        # Check expiration date if present
+        if r.expires_at and r.expires_at.tzinfo:
+            if r.expires_at < now:
+                continue
+        elif r.expires_at and not r.expires_at.tzinfo:
+            if r.expires_at < now.replace(tzinfo=None):
+                continue
+                
+        active_offers.append({
+            "id": r.id,
+            "title": r.title,
+            "description": r.description,
+            "offerType": r.offer_type,
+            "discountPercentage": r.discount_percentage,
+            "bonusCoinsPercentage": r.bonus_coins_percentage,
+            "packageId": r.package_id,
+            "bannerUrl": r.banner_url,
+            "expiresAt": r.expires_at.isoformat() if r.expires_at else None,
+        })
+    return active_offers
 
 
 def pricing_config():
@@ -75,6 +129,9 @@ def pricing_config():
         "chatDurationOptions": settings.paid_chat_duration_options,
         "postPriceMinCoins": settings.post_price_min_coins,
         "postPriceMaxCoins": settings.post_price_max_coins,
+        "postDeductionEnabled": settings.post_deduction_enabled,
+        "publicPostPriceCoins": settings.public_post_price_coins,
+        "privatePostPriceCoins": settings.private_post_price_coins,
     }
 
 

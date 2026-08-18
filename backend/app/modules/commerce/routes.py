@@ -12,6 +12,7 @@ subscription_router.add_api_route("/cancel-renewal", controller.cancel_subscript
 wallet_router = APIRouter(prefix="/wallet", tags=["wallet"])
 wallet_router.add_api_route("", controller.wallet, methods=["GET"])
 wallet_router.add_api_route("/coin-packages", controller.coin_packages, methods=["GET"])
+wallet_router.add_api_route("/offers", controller.list_active_offers, methods=["GET"])
 wallet_router.add_api_route("/pricing", controller.pricing_config, methods=["GET"])
 wallet_router.add_api_route("/buy-coins", controller.buy_coins, methods=["POST"], status_code=201)
 wallet_router.add_api_route("/transactions", controller.transactions, methods=["GET"])

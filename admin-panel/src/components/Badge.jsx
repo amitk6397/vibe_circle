@@ -19,6 +19,7 @@ const STATUS_MAP = {
   submitted:    { label: 'Submitted',   cls: 'badge--blue' },
   admin:        { label: 'Admin',       cls: 'badge--purple' },
   moderator:    { label: 'Moderator',   cls: 'badge--blue' },
+  owner:        { label: 'Owner',       cls: 'badge--purple' },
   user:         { label: 'User',        cls: 'badge--grey' },
   true:         { label: 'Yes',         cls: 'badge--green' },
   false:        { label: 'No',          cls: 'badge--grey' },

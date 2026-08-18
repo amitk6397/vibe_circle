@@ -1,5 +1,7 @@
+import { createPortal } from 'react-dom';
+
 export default function Modal({ title, onClose, children, size = 'md' }) {
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={`modal modal--${size}`} role="dialog" aria-modal="true">
         <div className="modal__header">
@@ -8,6 +10,8 @@ export default function Modal({ title, onClose, children, size = 'md' }) {
         </div>
         <div className="modal__body">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
+

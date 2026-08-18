@@ -4,9 +4,19 @@ import { commerceService } from '../services/commerceService';
 export function useCommerce() {
   const [plans, setPlans] = useState([]);
   const [packages, setPackages] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const fetchOffers = useCallback(async () => {
+    try {
+      const res = await commerceService.listOffers();
+      setOffers(res.data);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to load special offers.');
+    }
+  }, []);
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -41,9 +51,9 @@ export function useCommerce() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchPlans(), fetchPackages()]);
+    await Promise.all([fetchPlans(), fetchPackages(), fetchOffers()]);
     setLoading(false);
-  }, [fetchPlans, fetchPackages]);
+  }, [fetchPlans, fetchPackages, fetchOffers]);
 
   // Plans operations
   const createPlan = useCallback(async (data) => {
@@ -102,12 +112,47 @@ export function useCommerce() {
     }
   }, [fetchPackages]);
 
+  // Special Offers operations
+  const createOffer = useCallback(async (data) => {
+    try {
+      await commerceService.createOffer(data);
+      await fetchOffers();
+      return true;
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to create special offer.');
+      return false;
+    }
+  }, [fetchOffers]);
+
+  const updateOffer = useCallback(async (id, data) => {
+    try {
+      await commerceService.updateOffer(id, data);
+      await fetchOffers();
+      return true;
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to update special offer.');
+      return false;
+    }
+  }, [fetchOffers]);
+
+  const deleteOffer = useCallback(async (id) => {
+    try {
+      await commerceService.deleteOffer(id);
+      await fetchOffers();
+      return true;
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to delete special offer.');
+      return false;
+    }
+  }, [fetchOffers]);
+
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   return {
-    plans, packages, transactions, loading, error,
+    plans, packages, offers, transactions, loading, error,
     createPlan, updatePlan, deletePlan,
     createPackage, updatePackage,
+    createOffer, updateOffer, deleteOffer,
     fetchTransactions,
     refresh: fetchAll,
   };

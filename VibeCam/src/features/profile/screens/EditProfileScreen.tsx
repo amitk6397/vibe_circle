@@ -48,20 +48,42 @@ export function EditProfileScreen({ navigation }: any) {
   const profile = useAppStore((s) => s.profile);
   const [form, setForm] = useState(profile);
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
   const set = (key: keyof typeof form) => (value: string) => setForm({ ...form, [key]: value });
-  const save = () => {
+  
+  const save = async () => {
     const message = requiredTextError(form.name, 'Name') || usernameError(form.username);
     if (message) return setError(message);
     if (form.bio.trim().length > 240) return setError('Bio must be 240 characters or less.');
     setError('');
-    useAppStore.getState().updateProfile({
-      ...form,
-      name: form.name.trim(),
-      username: form.username.trim(),
-      bio: form.bio.trim(),
-      city: form.city.trim(),
-    });
-    navigation.goBack();
+    setSaving(true);
+    try {
+      let avatarUri = form.avatarUri;
+      if (avatarUri && (avatarUri.startsWith('file://') || avatarUri.startsWith('content://'))) {
+        const uploaded = await uploadAttachment({
+          id: 'avatar',
+          kind: 'image',
+          uri: avatarUri,
+          name: 'avatar.jpg',
+          mimeType: 'image/jpeg',
+          size: 0,
+        });
+        avatarUri = uploaded.url;
+      }
+      useAppStore.getState().updateProfile({
+        ...form,
+        name: form.name.trim(),
+        username: form.username.trim(),
+        bio: form.bio.trim(),
+        city: form.city.trim(),
+        avatarUri,
+      });
+      navigation.goBack();
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload photo.');
+    } finally {
+      setSaving(false);
+    }
   };
   return (
     <Screen>
@@ -96,7 +118,7 @@ export function EditProfileScreen({ navigation }: any) {
       <Text style={ui.muted}>{form.bio.length}/240 characters</Text>
       <Field label="City (optional)" value={form.city} onChangeText={set('city')} />
       {!!error && <Text style={styles.error}>{error}</Text>}
-      <Button title="Save changes" onPress={save} />
+      <Button title={saving ? "Saving changes..." : "Save changes"} disabled={saving} onPress={save} />
     </Screen>
   );
 }

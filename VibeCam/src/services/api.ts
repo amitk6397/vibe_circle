@@ -249,6 +249,7 @@ export const subscriptionApi = {
 export const walletApi = {
   get: () => apiClient.get<UserWallet>('/wallet'),
   packages: () => apiClient.get<CoinPackage[]>('/wallet/coin-packages'),
+  offers: () => apiClient.get<any[]>('/wallet/offers'),
   transactions: (before?: string) =>
     apiClient.get<WalletTransaction[]>('/wallet/transactions', { params: { before } }),
   buyCoins: (packageId: string, purchaseToken: string) =>

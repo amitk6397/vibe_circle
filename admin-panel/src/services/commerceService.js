@@ -17,4 +17,10 @@ export const commerceService = {
 
   // Revenue Summary
   revenueSummary: (period = '30d') => api.get('/admin/revenue-summary', { params: { period } }),
+
+  // Special Offers
+  listOffers: () => api.get('/admin/offers'),
+  createOffer: (data) => api.post('/admin/offers', data),
+  updateOffer: (id, data) => api.patch(`/admin/offers/${id}`, data),
+  deleteOffer: (id) => api.delete(`/admin/offers/${id}`),
 };

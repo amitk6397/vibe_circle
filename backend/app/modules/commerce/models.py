@@ -42,6 +42,25 @@ class CoinPackage(Base, IdMixin, TimestampMixin):
     price_minor: Mapped[int] = mapped_column(Integer)
     currency: Mapped[str] = mapped_column(String(8), default="INR")
     active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    discount_percentage: Mapped[int] = mapped_column(Integer, default=0)
+    badge: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    is_popular: Mapped[bool] = mapped_column(Boolean, default=False)
+    description: Mapped[str | None] = mapped_column(String(200), nullable=True)
+
+
+class SpecialOffer(Base, IdMixin, TimestampMixin):
+    __tablename__ = "special_offers"
+
+    title: Mapped[str] = mapped_column(String(120))
+    description: Mapped[str] = mapped_column(Text)
+    offer_type: Mapped[str] = mapped_column(String(40), default="discount")  # discount | bonus | banner
+    discount_percentage: Mapped[int] = mapped_column(Integer, default=0)
+    bonus_coins_percentage: Mapped[int] = mapped_column(Integer, default=0)
+    package_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    banner_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class UserWallet(Base, IdMixin, TimestampMixin):

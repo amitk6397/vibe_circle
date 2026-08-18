@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal, Optional
 from pydantic import BaseModel
 
@@ -67,6 +68,10 @@ class CoinPackageCreate(BaseModel):
     price_minor: int
     currency: str = "INR"
     active: bool = True
+    discount_percentage: int = 0
+    badge: Optional[str] = None
+    is_popular: bool = False
+    description: Optional[str] = None
 
 
 class CoinPackageUpdate(BaseModel):
@@ -75,6 +80,38 @@ class CoinPackageUpdate(BaseModel):
     bonus_coins: Optional[int] = None
     price_minor: Optional[int] = None
     active: Optional[bool] = None
+    discount_percentage: Optional[int] = None
+    badge: Optional[str] = None
+    is_popular: Optional[bool] = None
+    description: Optional[str] = None
+
+
+# ── Special Offers ────────────────────────────────────────────────────────────
+
+class SpecialOfferCreate(BaseModel):
+    title: str
+    description: str
+    offer_type: str = "discount"
+    discount_percentage: int = 0
+    bonus_coins_percentage: int = 0
+    package_id: Optional[str] = None
+    banner_url: Optional[str] = None
+    active: bool = True
+    starts_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+
+
+class SpecialOfferUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    offer_type: Optional[str] = None
+    discount_percentage: Optional[int] = None
+    bonus_coins_percentage: Optional[int] = None
+    package_id: Optional[str] = None
+    banner_url: Optional[str] = None
+    active: Optional[bool] = None
+    starts_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
 
 
 # ── Support Articles ─────────────────────────────────────────────────────────
@@ -141,6 +178,10 @@ class PlatformSettingsUpdate(BaseModel):
     # Safety
     restricted_words: Optional[list[str]] = None
     dummy_payments_enabled: Optional[bool] = None
+    # Post creation charging
+    post_deduction_enabled: Optional[bool] = None
+    public_post_price_coins: Optional[int] = None
+    private_post_price_coins: Optional[int] = None
 
 
 # ── Virtual Gifts ─────────────────────────────────────────────────────────────

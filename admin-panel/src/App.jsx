@@ -20,6 +20,7 @@ import RevenueView from './views/RevenueView';
 import GiftsView from './views/GiftsView';
 import LiveStreamsView from './views/LiveStreamsView';
 import ReferralView from './views/ReferralView';
+import OffersView from './views/OffersView';
 
 import './index.css';
 
@@ -32,6 +33,7 @@ function renderPage(page, navigate) {
     case 'withdrawals':  return <WithdrawalsView />;
     case 'plans':        return <CoinPackagesView />;
     case 'packages':     return <CoinPackagesView />;
+    case 'offers':       return <OffersView />;
     case 'articles':     return <SupportArticlesView />;
     case 'gifts':        return <GiftsView />;
     case 'livestreams':  return <LiveStreamsView />;

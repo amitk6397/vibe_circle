@@ -17,6 +17,24 @@ async def lifespan(_: FastAPI):
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
     ensure_database_exists()
     Base.metadata.create_all(bind=engine)
+    
+    # Auto-migration hook for newly added SQLite columns
+    with engine.begin() as conn:
+        from sqlalchemy import text
+        for col, col_type in [
+            ("discount_percentage", "INTEGER DEFAULT 0"),
+            ("badge", "VARCHAR(40)"),
+            ("is_popular", "BOOLEAN DEFAULT 0"),
+            ("description", "VARCHAR(200)")
+        ]:
+            try:
+                conn.execute(text(f"SELECT {col} FROM coin_packages LIMIT 1"))
+            except Exception:
+                try:
+                    conn.execute(text(f"ALTER TABLE coin_packages ADD COLUMN {col} {col_type}"))
+                except Exception as e:
+                    print(f"Migration error adding {col}: {e}")
+
     with SessionLocal() as db:
         seed_app_content(db)
     yield

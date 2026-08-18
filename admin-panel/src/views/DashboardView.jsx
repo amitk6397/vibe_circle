@@ -106,54 +106,54 @@ export default function DashboardView({ onNavigate }) {
         overflow: 'hidden',
         boxShadow: '0 8px 48px rgba(108,93,211,0.2), 0 0 0 1px rgba(255,255,255,0.03) inset',
       }}>
-        <div style={{ position:'absolute', top:-80, right:-80, width:250, height:250, borderRadius:'50%', background:'radial-gradient(circle, rgba(108,93,211,0.2) 0%, transparent 70%)', pointerEvents:'none' }} />
-        <div style={{ position:'absolute', bottom:-60, left:-60, width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(0,212,255,0.12) 0%, transparent 70%)', pointerEvents:'none' }} />
-        <div style={{ position:'relative', zIndex:1 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-            <span style={{ fontSize:13, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(168,130,255,0.8)' }}>🏦 Admin Earnings At a Glance</span>
-            <span style={{ fontSize:11, background:'rgba(34,197,94,0.15)', color:'#22c55e', border:'1px solid rgba(34,197,94,0.3)', borderRadius:100, padding:'2px 10px', fontWeight:700 }}>LIVE</span>
+        <div style={{ position: 'absolute', top: -80, right: -80, width: 250, height: 250, borderRadius: '50%', background: 'radial-gradient(circle, rgba(108,93,211,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -60, left: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,212,255,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(168,130,255,0.8)' }}>🏦 Admin Earnings At a Glance</span>
+            <span style={{ fontSize: 11, background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 100, padding: '2px 10px', fontWeight: 700 }}>LIVE</span>
           </div>
-          <div style={{ display:'flex', gap:32, flexWrap:'wrap', alignItems:'flex-end' }}>
+          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div>
-              <div style={{ fontSize:'2.8rem', fontWeight:900, lineHeight:1, letterSpacing:'-0.04em', background:'linear-gradient(135deg,#fff 40%,#a78bfa 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
+              <div style={{ fontSize: '2.8rem', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.04em', background: 'linear-gradient(135deg,#fff 40%,#a78bfa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 ₹<AnimatedNumber value={Math.floor((stats?.totalRevenue || 0) / 100)} />
               </div>
-              <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:5, fontWeight:500 }}>Total Revenue (Coin Pack Sales)</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 5, fontWeight: 500 }}>Total Revenue (Coin Pack Sales)</div>
             </div>
-            <div style={{ width:1, height:60, background:'rgba(255,255,255,0.1)', alignSelf:'center' }} />
+            <div style={{ width: 1, height: 60, background: 'rgba(255,255,255,0.1)', alignSelf: 'center' }} />
             <div>
-              <div style={{ fontSize:'2rem', fontWeight:900, lineHeight:1, letterSpacing:'-0.03em', color:'#f59e0b' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.03em', color: '#f59e0b' }}>
                 🪙 <AnimatedNumber value={stats?.totalCoinsSold} />
               </div>
-              <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:5, fontWeight:500 }}>Total Coins Sold</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 5, fontWeight: 500 }}>Total Coins Sold</div>
             </div>
-            <div style={{ width:1, height:60, background:'rgba(255,255,255,0.1)', alignSelf:'center' }} />
+            <div style={{ width: 1, height: 60, background: 'rgba(255,255,255,0.1)', alignSelf: 'center' }} />
             <div>
-              <div style={{ fontSize:'1.6rem', fontWeight:800, lineHeight:1, color:'#00d4ff' }}>
-                <AnimatedNumber value={stats?.pendingWithdrawals} /> <span style={{ fontSize:14, opacity:0.6 }}>pending</span>
+              <div style={{ fontSize: '1.6rem', fontWeight: 800, lineHeight: 1, color: '#00d4ff' }}>
+                <AnimatedNumber value={stats?.pendingWithdrawals} /> <span style={{ fontSize: 14, opacity: 0.6 }}>pending</span>
               </div>
-              <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:5, fontWeight:500 }}>Payouts Awaiting Approval</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 5, fontWeight: 500 }}>Payouts Awaiting Approval</div>
             </div>
           </div>
-          <div style={{ display:'flex', gap:10, marginTop:20, flexWrap:'wrap' }}>
+          <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
             {[
-              { label:'Open Reports', value: stats?.openReports || 0, icon:'🚩', color:'#ef4444', page:'reports' },
-              { label:'Active Users', value: stats?.activeUsers || 0, icon:'✅', color:'#22c55e', page:'users' },
-              { label:'Communities', value: stats?.totalCommunities || 0, icon:'🏘️', color:'#6c5dd3', page:'communities' },
+              { label: 'Open Reports', value: stats?.openReports || 0, icon: '🚩', color: '#ef4444', page: 'reports' },
+              { label: 'Active Users', value: stats?.activeUsers || 0, icon: '✅', color: '#22c55e', page: 'users' },
+              { label: 'Communities', value: stats?.totalCommunities || 0, icon: '🏘️', color: '#6c5dd3', page: 'communities' },
             ].map(chip => (
               <button key={chip.page} onClick={() => onNavigate(chip.page)} style={{
-                display:'flex', alignItems:'center', gap:8,
-                background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)',
-                borderRadius:10, padding:'7px 14px', cursor:'pointer',
-                transition:'all 0.2s', color:'inherit',
+                display: 'flex', alignItems: 'center', gap: 8,
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 10, padding: '7px 14px', cursor: 'pointer',
+                transition: 'all 0.2s', color: 'inherit',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.1)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.05)'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
               >
-                <span style={{ fontSize:15 }}>{chip.icon}</span>
+                <span style={{ fontSize: 15 }}>{chip.icon}</span>
                 <div>
-                  <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>{chip.label}</div>
-                  <div style={{ fontSize:14, fontWeight:800, color: chip.color }}>{chip.value}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{chip.label}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: chip.color }}>{chip.value}</div>
                 </div>
               </button>
             ))}
@@ -169,9 +169,7 @@ export default function DashboardView({ onNavigate }) {
         <StatCard icon="🆕" label="New Today" value={<AnimatedNumber value={stats?.newUsersToday} />} color="blue" />
         <StatCard icon="🏘️" label="Communities" value={<AnimatedNumber value={stats?.totalCommunities} />} color="purple" onClick={() => onNavigate('communities')} />
         <StatCard icon="🚩" label="Open Reports" value={<AnimatedNumber value={stats?.openReports} />} color="red" onClick={() => onNavigate('reports')} />
-        <StatCard icon="💸" label="Pending Payouts" value={<AnimatedNumber value={stats?.pendingWithdrawals} />} color="orange" onClick={() => onNavigate('withdrawals')} />
-        <StatCard icon="🪙" label="Total Coins Sold" value={<AnimatedNumber value={stats?.totalCoinsSold} />} color="blue" />
-        <StatCard icon="💰" label="Total Revenue" value={<AnimatedNumber value={Math.floor((stats?.totalRevenue || 0) / 100)} prefix="₹" />} color="green" onClick={() => onNavigate('revenue')} />
+
       </div>
 
       {/* ─── Charts Row 1 ──────────────────────────────── */}

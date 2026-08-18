@@ -19,6 +19,8 @@ from app.modules.admin.dtos import (
     WithdrawalReview,
     VirtualGiftCreate,
     VirtualGiftUpdate,
+    SpecialOfferCreate,
+    SpecialOfferUpdate,
 )
 from app.modules.app_content.models import SupportArticle
 from app.modules.commerce.models import CoinPackage, SubscriptionPlan, UserSubscription, UserWallet, WalletTransaction
@@ -256,6 +258,10 @@ def list_communities(
             "ownerName": owner.name if owner else "Unknown",
             "ownerId": c.owner_id,
             "createdAt": c.created_at,
+            "logoUrl": c.logo_url,
+            "coverUrl": c.cover_url,
+            "description": c.description,
+            "premiumPrice": c.premium_price,
         }
 
     return [_comm_dict(c) for c in rows]
@@ -264,8 +270,28 @@ def list_communities(
 def update_community(community_id: str, payload: CommunityStatusUpdate, db: DbSession, user: CurrentUser):
     require_admin(user)
     community = _require(db, Community, community_id, "community")
+    old_status = community.status
     community.status = payload.status
     audit(db, user.id, f"admin.community.{payload.status}", "community", community.id)
+    
+    # Notify owner on status change
+    if payload.status == "suspended" and old_status != "suspended":
+        create_notification(
+            db,
+            community.owner_id,
+            "system",
+            "Community Suspended",
+            f"Your community '{community.name}' has been suspended by an administrator."
+        )
+    elif payload.status == "active" and old_status == "suspended":
+        create_notification(
+            db,
+            community.owner_id,
+            "system",
+            "Community Restored",
+            f"Your community '{community.name}' has been re-activated by an administrator."
+        )
+
     db.commit()
     return {"id": community.id, "status": community.status}
 
@@ -275,8 +301,41 @@ def delete_community(community_id: str, db: DbSession, user: CurrentUser):
     community = _require(db, Community, community_id, "community")
     community.status = "deleted"
     audit(db, user.id, "admin.community.deleted", "community", community.id)
+    
+    # Notify owner on deletion
+    create_notification(
+        db,
+        community.owner_id,
+        "system",
+        "Community Deleted",
+        f"Your community '{community.name}' has been deleted by an administrator."
+    )
+
     db.commit()
     return {"message": "Community deleted."}
+
+
+def list_community_members(community_id: str, db: DbSession, user: CurrentUser):
+    require_admin(user)
+    _require(db, Community, community_id, "community")
+    
+    from app.modules.communities.models import CommunityMember
+    stmt = select(CommunityMember).where(CommunityMember.community_id == community_id)
+    members = db.scalars(stmt).all()
+    
+    results = []
+    for m in members:
+        u = db.get(User, m.user_id)
+        if u:
+            results.append({
+                "id": u.id,
+                "username": u.username,
+                "name": u.name,
+                "avatarUrl": u.avatar_url,
+                "role": m.role,
+                "joinedAt": m.created_at
+            })
+    return results
 
 
 # ── Subscription Plans ────────────────────────────────────────────────────────
@@ -337,6 +396,44 @@ def update_coin_package(package_id: str, payload: CoinPackageUpdate, db: DbSessi
     db.commit()
     db.refresh(item)
     return item
+
+
+# ── Special Offers ────────────────────────────────────────────────────────────
+
+def list_offers(db: DbSession, user: CurrentUser):
+    require_admin(user)
+    from app.modules.commerce.models import SpecialOffer
+    return list(db.scalars(select(SpecialOffer).order_by(SpecialOffer.created_at.desc())))
+
+
+def create_offer(payload: SpecialOfferCreate, db: DbSession, user: CurrentUser):
+    require_admin(user)
+    from app.modules.commerce.models import SpecialOffer
+    item = SpecialOffer(**payload.model_dump())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+def update_offer(offer_id: str, payload: SpecialOfferUpdate, db: DbSession, user: CurrentUser):
+    require_admin(user)
+    from app.modules.commerce.models import SpecialOffer
+    item = _require(db, SpecialOffer, offer_id, "special_offer")
+    for k, v in payload.model_dump(exclude_none=True).items():
+        setattr(item, k, v)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+def delete_offer(offer_id: str, db: DbSession, user: CurrentUser):
+    require_admin(user)
+    from app.modules.commerce.models import SpecialOffer
+    item = _require(db, SpecialOffer, offer_id, "special_offer")
+    db.delete(item)
+    db.commit()
+    return {"message": "Offer deleted."}
 
 
 # ── Creator Applications ──────────────────────────────────────────────────────
@@ -456,9 +553,154 @@ def review_withdrawal(withdrawal_id: str, payload: WithdrawalReview, db: DbSessi
     return item
 
 
+def _enrich_report(db: DbSession, report: Report) -> dict:
+    from app.modules.users.models import User
+    from app.modules.feed.models import Post, Comment
+    from app.modules.communities.models import Community
+    from app.modules.chat.models import Message
+
+    data = {
+        "id": report.id,
+        "reporter_id": report.reporter_id,
+        "target_type": report.target_type,
+        "target_id": report.target_id,
+        "reason": report.reason,
+        "details": report.details,
+        "evidence_ids": report.evidence_ids,
+        "status": report.status,
+        "created_at": report.created_at,
+        "reporter": None,
+        "target": None
+    }
+
+    reporter = db.get(User, report.reporter_id)
+    if reporter:
+        data["reporter"] = {
+            "id": reporter.id,
+            "username": reporter.username,
+            "name": reporter.name,
+            "avatar_url": reporter.avatar_url,
+            "email": reporter.email
+        }
+
+    if report.target_type == "user":
+        t_user = db.get(User, report.target_id)
+        if t_user:
+            data["target"] = {
+                "id": t_user.id,
+                "type": "user",
+                "display_name": f"@{t_user.username} ({t_user.name})",
+                "details": f"Bio: {t_user.bio or 'N/A'}",
+                "avatar_url": t_user.avatar_url
+            }
+    elif report.target_type == "post":
+        t_post = db.get(Post, report.target_id)
+        if t_post:
+            author = db.get(User, t_post.author_id)
+            display_name = f"Post by @{author.username}" if author else "Post by Unknown"
+            data["target"] = {
+                "id": t_post.id,
+                "type": "post",
+                "display_name": display_name,
+                "details": t_post.body,
+                "media_url": t_post.media_url,
+                "author_id": t_post.author_id,
+                "author": {
+                    "username": author.username,
+                    "name": author.name,
+                    "avatar_url": author.avatar_url
+                } if author else None
+            }
+    elif report.target_type == "comment":
+        t_comment = db.get(Comment, report.target_id)
+        if t_comment:
+            author = db.get(User, t_comment.author_id)
+            display_name = f"Comment by @{author.username}" if author else "Comment by Unknown"
+            data["target"] = {
+                "id": t_comment.id,
+                "type": "comment",
+                "display_name": display_name,
+                "details": t_comment.body,
+                "author_id": t_comment.author_id,
+                "author": {
+                    "username": author.username,
+                    "name": author.name,
+                    "avatar_url": author.avatar_url
+                } if author else None
+            }
+    elif report.target_type == "community":
+        t_comm = db.get(Community, report.target_id)
+        if t_comm:
+            owner = db.get(User, t_comm.owner_id)
+            display_name = f"Community: {t_comm.name}"
+            data["target"] = {
+                "id": t_comm.id,
+                "type": "community",
+                "display_name": display_name,
+                "details": t_comm.description,
+                "logo_url": t_comm.logo_url,
+                "cover_url": t_comm.cover_url,
+                "owner": {
+                    "username": owner.username,
+                    "name": owner.name
+                } if owner else None
+            }
+    elif report.target_type == "message":
+        t_msg = db.get(Message, report.target_id)
+        if t_msg:
+            sender = db.get(User, t_msg.sender_id)
+            display_name = f"Message from @{sender.username}" if sender else "Message from Unknown"
+            data["target"] = {
+                "id": t_msg.id,
+                "type": "message",
+                "display_name": display_name,
+                "details": t_msg.text,
+                "media_url": t_msg.media_url,
+                "sender": {
+                    "username": sender.username,
+                    "name": sender.name,
+                    "avatar_url": sender.avatar_url
+                } if sender else None
+            }
+
+    if not data["target"]:
+        data["target"] = {
+            "id": report.target_id,
+            "type": report.target_type,
+            "display_name": f"Target ID: {report.target_id[:8]}... (Type: {report.target_type})",
+            "details": "Target content could not be found or has been deleted."
+        }
+
+    return data
+
+
 def list_reports(db: DbSession, user: CurrentUser):
     require_admin(user)
-    return list(db.scalars(select(Report).order_by(Report.created_at.desc()).limit(200)))
+    reports = db.scalars(select(Report).order_by(Report.created_at.desc()).limit(200)).all()
+    return [_enrich_report(db, r) for r in reports]
+
+
+def _get_reported_user_id(db: DbSession, target_type: str, target_id: str) -> str | None:
+    from app.modules.users.models import User
+    from app.modules.feed.models import Post, Comment
+    from app.modules.communities.models import Community
+    from app.modules.chat.models import Message
+
+    if target_type == "user":
+        return target_id
+    elif target_type == "post":
+        post = db.get(Post, target_id)
+        return post.author_id if post else None
+    elif target_type == "comment":
+        comment = db.get(Comment, target_id)
+        return comment.author_id if comment else None
+    elif target_type == "community":
+        comm = db.get(Community, target_id)
+        return comm.owner_id if comm else None
+    elif target_type == "message":
+        msg = db.get(Message, target_id)
+        return msg.sender_id if msg else None
+    return None
 
 
 def review_report(report_id: str, payload: ReportReview, db: DbSession, user: CurrentUser):
@@ -480,9 +722,53 @@ def review_report(report_id: str, payload: ReportReview, db: DbSession, user: Cu
         elif item.target_type == "story" and (target := db.get(Story, item.target_id)): db.delete(target)
         elif item.target_type == "community" and (target := db.get(Community, item.target_id)): target.status = "suspended"
         elif item.target_type == "rating" and (target := db.get(RatingReview, item.target_id)): target.status = "removed"
+    
+    # 1. Notify the Reporter
+    reporter_msg = "Your report has been reviewed."
+    if payload.status == "dismissed":
+        reporter_msg = "Your report was reviewed. After investigation, no violations were found. Thank you for keeping our community safe."
+    elif payload.status == "resolved":
+        action_label = payload.action.replace('_', ' ')
+        reporter_msg = f"Your report was resolved. Action '{action_label}' has been taken regarding the reported content/user."
+        
+    create_notification(
+        db,
+        item.reporter_id,
+        "system",
+        "Report Review Update",
+        reporter_msg,
+        {"report_id": item.id, "status": payload.status}
+    )
+
+    # 2. Notify the Reported User (if action was taken)
+    reported_user_id = _get_reported_user_id(db, item.target_type, item.target_id)
+    if reported_user_id and payload.action != "none":
+        reported_title = "Moderation Notice"
+        if payload.action == "warn":
+            reported_body = f"Warning: You received a formal warning regarding your reported '{item.target_type}'."
+        elif payload.action == "restrict":
+            reported_body = "Your account has been restricted due to community guidelines violations."
+        elif payload.action == "suspend":
+            reported_body = "Your account has been suspended due to community guidelines violations."
+        elif payload.action == "ban":
+            reported_body = "Your account has been permanently banned due to severe guidelines violations."
+        elif payload.action == "remove_content":
+            reported_body = f"Content Removed: Your reported '{item.target_type}' has been removed for violating guidelines."
+        else:
+            reported_body = f"Action '{payload.action}' has been taken on your account due to report violations."
+
+        create_notification(
+            db,
+            reported_user_id,
+            "system",
+            reported_title,
+            reported_body,
+            {"report_id": item.id, "action": payload.action, "target_type": item.target_type}
+        )
+
     audit(db, user.id, f"report.{payload.action}", item.target_type, item.target_id, {"report_id": item.id})
     db.commit()
-    return item
+    return _enrich_report(db, item)
 
 
 def list_audit_logs(db: DbSession, user: CurrentUser):
@@ -574,6 +860,10 @@ def get_settings(db: DbSession, user: CurrentUser):
         # Safety & toggles
         "restrictedWords": settings.restricted_words,
         "dummyPaymentsEnabled": settings.dummy_payments_enabled,
+        # Post creation charging
+        "postDeductionEnabled": settings.post_deduction_enabled,
+        "publicPostPriceCoins": settings.public_post_price_coins,
+        "privatePostPriceCoins": settings.private_post_price_coins,
     }
 
 
@@ -623,6 +913,10 @@ def update_settings(payload: PlatformSettingsUpdate, db: DbSession, user: Curren
         # Safety
         "restricted_words": "RESTRICTED_WORDS",
         "dummy_payments_enabled": "DUMMY_PAYMENTS_ENABLED",
+        # Post creation charging
+        "post_deduction_enabled": "POST_DEDUCTION_ENABLED",
+        "public_post_price_coins": "PUBLIC_POST_PRICE_COINS",
+        "private_post_price_coins": "PRIVATE_POST_PRICE_COINS",
     }
     # Apply changes to the in-memory settings object
     for key, value in changes.items():
