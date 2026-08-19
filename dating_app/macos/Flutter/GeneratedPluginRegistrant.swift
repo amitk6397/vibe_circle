@@ -6,7 +6,7 @@ import FlutterMacOS
 import Foundation
 
 import agora_rtc_engine
-import file_picker_darwin
+import file_picker
 import file_selector_macos
 import iris_method_channel
 import shared_preferences_foundation

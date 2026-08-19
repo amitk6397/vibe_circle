@@ -1,5 +1,7 @@
+import 'package:dating_app/core/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../community/models/community.dart';
@@ -44,12 +46,20 @@ class PrivateCirclesView extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: OutlinedButton.icon(
               onPressed: () => Get.toNamed('/circle-invites'),
-              icon: const Icon(Icons.mark_email_unread_outlined, color: AppColors.primary),
-              label: Text('Circle invitations', style: AppTextStyles.button.copyWith(color: AppColors.primary)),
+              icon: const Icon(
+                Icons.mark_email_unread_outlined,
+                color: AppColors.primary,
+              ),
+              label: Text(
+                'Circle invitations',
+                style: AppTextStyles.button.copyWith(color: AppColors.primary),
+              ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppColors.primary),
                 minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
           ),
@@ -63,7 +73,10 @@ class PrivateCirclesView extends StatelessWidget {
                       final circle = circles[index];
                       return _CircleCard(
                         circle: circle,
-                        onPress: () => Get.toNamed('/community-details', arguments: {'communityId': circle.id}),
+                        onPress: () => Get.toNamed(
+                          '/community-details',
+                          arguments: {'communityId': circle.id},
+                        ),
                       );
                     },
                   ),
@@ -96,9 +109,15 @@ class _CircleCard extends StatelessWidget {
             CircleAvatar(
               radius: 26,
               backgroundColor: AppColors.primary.withValues(alpha: 0.2),
-              backgroundImage: circle.logoUrl != null ? NetworkImage(circle.logoUrl!) : null,
+              backgroundImage: circle.logoUrl != null
+                  ? NetworkImage(Helpers.resolveImageUrl(circle.logoUrl!) ?? '')
+                  : null,
               child: circle.logoUrl == null
-                  ? const Icon(Icons.lock_outline, color: AppColors.primary, size: 22)
+                  ? const Icon(
+                      Icons.lock_outline,
+                      color: AppColors.primary,
+                      size: 22,
+                    )
                   : null,
             ),
             const SizedBox(width: 14),
@@ -109,7 +128,9 @@ class _CircleCard extends StatelessWidget {
                   Text(circle.name, style: AppTextStyles.titleSmall),
                   Text(
                     '${circle.members ?? 0} members',
-                    style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textMuted,
+                    ),
                   ),
                 ],
               ),
@@ -134,7 +155,11 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.people_outline, size: 64, color: AppColors.textMuted),
+            const Icon(
+              Icons.people_outline,
+              size: 64,
+              color: AppColors.textMuted,
+            ),
             const SizedBox(height: 16),
             Text('No private circles yet', style: AppTextStyles.titleMedium),
             const SizedBox(height: 8),
@@ -146,7 +171,9 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: onAction,
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
               child: const Text('Create circle'),
             ),
           ],

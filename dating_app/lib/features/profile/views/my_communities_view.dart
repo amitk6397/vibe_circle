@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../community/models/community.dart';
+import '../../../core/utils/helpers.dart';
 
 class MyCommunitiesView extends StatelessWidget {
   const MyCommunitiesView({super.key});
@@ -83,7 +84,7 @@ class _CommunityCard extends StatelessWidget {
               child: community.coverUrl != null
                   ? ClipRRect(
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                      child: Image.network(community.coverUrl!, fit: BoxFit.cover, width: double.infinity),
+                      child: Image.network(Helpers.resolveImageUrl(community.coverUrl!) ?? '', fit: BoxFit.cover, width: double.infinity),
                     )
                   : const SizedBox(),
             ),
@@ -94,7 +95,7 @@ class _CommunityCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 22,
                     backgroundColor: AppColors.primary,
-                    backgroundImage: community.logoUrl != null ? NetworkImage(community.logoUrl!) : null,
+                    backgroundImage: community.logoUrl != null ? NetworkImage(Helpers.resolveImageUrl(community.logoUrl!) ?? '') : null,
                     child: community.logoUrl == null
                         ? const Icon(Icons.people, color: Colors.white, size: 20)
                         : null,

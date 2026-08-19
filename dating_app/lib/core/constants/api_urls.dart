@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiUrls {
@@ -6,7 +7,7 @@ class ApiUrls {
 
   static String get baseUrl {
     if (kIsWeb) {
-      return 'http://localhost:8000/api/v1';
+      return 'http://192.168.31.161:8000/api/v1';
     }
     // Check if running on Android Emulator (needs 10.0.2.2) vs others (127.0.0.1 or localhost)
     final String host = Platform.isAndroid ? '192.168.31.161' : '127.0.0.1';
@@ -16,7 +17,7 @@ class ApiUrls {
   // WebSocket base URL helper
   static String get wsBaseUrl {
     if (kIsWeb) {
-      return 'ws://localhost:8000/api/v1';
+      return 'ws://192.168.31.161:8000/api/v1';
     }
     final String host = Platform.isAndroid ? '192.168.31.161' : '127.0.0.1';
     return 'ws://$host:8000/api/v1';
@@ -40,7 +41,8 @@ class ApiUrls {
   static String get updateProfile => '/users/me';
   static String get updatePreferences => '/users/me/preferences';
   static String get updatePrivacy => '/users/me/privacy';
-  static String get updateNotificationPreferences => '/users/me/notification-preferences';
+  static String get updateNotificationPreferences =>
+      '/users/me/notification-preferences';
   static String get availability => '/users/me/availability';
   static String get connections => '/users/connections';
   static String connectionAction(String id) => '/users/connections/$id';
@@ -79,10 +81,13 @@ class ApiUrls {
   static String get circleInvites => '/communities/invitations/me';
   static String inviteToCircle(String id) => '/communities/$id/invite';
   static String circleInviteAction(String id) => '/communities/invitations/$id';
-  static String communityJoinRequests(String id) => '/communities/$id/join-requests';
-  static String communityJoinRequestsAction(String commId, String reqId) => '/communities/$commId/join-requests/$reqId';
+  static String communityJoinRequests(String id) =>
+      '/communities/$id/join-requests';
+  static String communityJoinRequestsAction(String commId, String reqId) =>
+      '/communities/$commId/join-requests/$reqId';
   static String sendCommunityMessage(String id) => '/communities/$id/messages';
-  static String communitySubscriptionStatus(String id) => '/communities/$id/subscription-status';
+  static String communitySubscriptionStatus(String id) =>
+      '/communities/$id/subscription-status';
 
   // Story endpoints
   static String get stories => '/feed/stories';
@@ -97,21 +102,30 @@ class ApiUrls {
   // Chat endpoints
   static String get createConversation => '/chat/conversations';
   static String get conversations => '/chat/conversations';
-  static String messages(String conversationId) => '/chat/conversations/$conversationId/messages';
-  static String communityMessages(String communityId) => '/communities/$communityId/messages';
-  static String markRead(String conversationId) => '/chat/conversations/$conversationId/read';
-  static String sendPrivateMessage(String conversationId) => '/chat/conversations/$conversationId/messages';
-  static String reactMessage(String messageId) => '/chat/messages/$messageId/reactions';
+  static String messages(String conversationId) =>
+      '/chat/conversations/$conversationId/messages';
+  static String communityMessages(String communityId) =>
+      '/communities/$communityId/messages';
+  static String markRead(String conversationId) =>
+      '/chat/conversations/$conversationId/read';
+  static String sendPrivateMessage(String conversationId) =>
+      '/chat/conversations/$conversationId/messages';
+  static String reactMessage(String messageId) =>
+      '/chat/messages/$messageId/reactions';
   static String deleteMessage(String messageId) => '/chat/messages/$messageId';
   static String get chatLimits => '/chat/limits';
   static String get messageRequests => '/chat/message-requests';
   static String messageRequestAction(String id) => '/chat/message-requests/$id';
-  static String unlockConversation(String id) => '/chat/conversations/$id/unlock';
-  static String deductChatMinute(String id) => '/chat/conversations/$id/deduct-minute';
+  static String unlockConversation(String id) =>
+      '/chat/conversations/$id/unlock';
+  static String deductChatMinute(String id) =>
+      '/chat/conversations/$id/deduct-minute';
 
   // WebSockets path helper
-  static String privateChatWs(String conversationId) => '/chat/ws/$conversationId';
-  static String communityChatWs(String communityId) => '/communities/ws/$communityId';
+  static String privateChatWs(String conversationId) =>
+      '/chat/ws/$conversationId';
+  static String communityChatWs(String communityId) =>
+      '/communities/ws/$communityId';
   static String callWs(String callId) => '/calls/ws/$callId';
 
   // Subscription endpoints
@@ -148,8 +162,10 @@ class ApiUrls {
   // Matching endpoints
   static String get matchingStart => '/matching/start';
   static String get matchingStatus => '/matching/status';
-  static String matchingAction(String matchId, String action) => '/matching/$matchId/$action';
-  static String matchingFeedback(String matchId) => '/matching/$matchId/feedback';
+  static String matchingAction(String matchId, String action) =>
+      '/matching/$matchId/$action';
+  static String matchingFeedback(String matchId) =>
+      '/matching/$matchId/feedback';
 
   // Notifications endpoints
   static String get notifications => '/notifications';

@@ -1,7 +1,9 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+
 import 'auth_controller.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/models/local_attachment.dart';
@@ -34,9 +36,7 @@ class BasicProfileController extends GetxController {
       genderController.text = profile.gender ?? '';
       selectedInterests.addAll(profile.interests);
       selectedLanguages.addAll(profile.languages);
-      if (profile.conversationTopics != null) {
-        selectedTopics.addAll(profile.conversationTopics!);
-      }
+      selectedTopics.addAll(profile.conversationTopics);
     }
   }
 
@@ -51,7 +51,10 @@ class BasicProfileController extends GetxController {
   Future<void> pickAvatar() async {
     try {
       final picker = ImagePicker();
-      final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
       if (image == null) return;
 
       avatar.value = LocalAttachment(
@@ -129,12 +132,18 @@ class BasicProfileController extends GetxController {
         'avatar_url': ?avatarUrl,
       };
 
-      await NetworkApiService.instance.patch(ApiUrls.updateProfile, data: payload);
-      await NetworkApiService.instance.patch(ApiUrls.updatePreferences, data: {
-        'interests': selectedInterests,
-        'languages': selectedLanguages,
-        'conversation_topics': selectedTopics,
-      });
+      await NetworkApiService.instance.patch(
+        ApiUrls.updateProfile,
+        data: payload,
+      );
+      await NetworkApiService.instance.patch(
+        ApiUrls.updatePreferences,
+        data: {
+          'interests': selectedInterests,
+          'languages': selectedLanguages,
+          'conversation_topics': selectedTopics,
+        },
+      );
 
       // Reload global session info
       await _authController.bootstrap();
@@ -146,4 +155,3 @@ class BasicProfileController extends GetxController {
     }
   }
 }
-

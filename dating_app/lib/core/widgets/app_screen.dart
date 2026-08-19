@@ -27,14 +27,14 @@ class AppScreen extends StatelessWidget {
       content = SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Padding(
-          padding: padding ?? (noPadding ? EdgeInsets.zero : const EdgeInsets.all(AppDimensions.md)),
+          padding: padding ?? (noPadding ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0)),
           child: child,
         ),
       );
     } else {
       if (!noPadding) {
         content = Padding(
-          padding: padding ?? const EdgeInsets.all(AppDimensions.md),
+          padding: padding ?? const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
           child: child,
         );
       }

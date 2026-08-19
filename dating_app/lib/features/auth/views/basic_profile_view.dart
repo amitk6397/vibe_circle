@@ -1,6 +1,8 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_data.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -11,6 +13,7 @@ import '../../../core/widgets/app_screen.dart';
 import '../../../core/widgets/app_pill.dart';
 import '../controllers/basic_profile_controller.dart';
 import '../controllers/auth_controller.dart';
+import '../../../core/utils/helpers.dart';
 
 class BasicProfileView extends GetView<BasicProfileController> {
   const BasicProfileView({super.key});
@@ -21,72 +24,83 @@ class BasicProfileView extends GetView<BasicProfileController> {
     final currentAvatarUri = authController.profile.value?.avatarUrl;
 
     return AppScreen(
-      header: const AppHeader(
-        title: 'Make it yours',
-        subtitle: 'Optional details improve recommendations.',
+      header: AppHeader(
+        title: 'Create profile',
+        onBack: authController.authenticated.value ? () => Get.back() : null,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Profile Photo Selector
-          Center(
-            child: GestureDetector(
-              onTap: () => controller.pickAvatar(),
-              child: Column(
-                children: [
-                  Obx(() {
-                    final avatar = controller.avatar.value;
-                    return Container(
-                      width: 92.0,
-                      height: 92.0,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        shape: BoxShape.circle,
-                        image: avatar != null
-                            ? DecorationImage(
-                                image: FileImage(File(avatar.uri)),
-                                fit: BoxFit.cover,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: GestureDetector(
+                onTap: () => controller.pickAvatar(),
+                child: Column(
+                  children: [
+                    Obx(() {
+                      final avatar = controller.avatar.value;
+                      return Container(
+                        width: 92.0,
+                        height: 92.0,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          shape: BoxShape.circle,
+                          image: avatar != null
+                              ? DecorationImage(
+                                  image: FileImage(File(avatar.uri)),
+                                  fit: BoxFit.cover,
+                                )
+                              : (currentAvatarUri != null &&
+                                        currentAvatarUri.isNotEmpty
+                                    ? DecorationImage(
+                                        image: NetworkImage(
+                                          Helpers.resolveImageUrl(
+                                                currentAvatarUri,
+                                              ) ??
+                                              '',
+                                        ),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null),
+                        ),
+                        alignment: Alignment.center,
+                        child:
+                            avatar == null &&
+                                (currentAvatarUri == null ||
+                                    currentAvatarUri.isEmpty)
+                            ? const Icon(
+                                Icons.camera_alt,
+                                size: 30.0,
+                                color: AppColors.primary,
                               )
-                            : (currentAvatarUri != null && currentAvatarUri.isNotEmpty
-                                ? DecorationImage(
-                                    image: NetworkImage(currentAvatarUri),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null),
-                      ),
-                      alignment: Alignment.center,
-                      child: avatar == null && (currentAvatarUri == null || currentAvatarUri.isEmpty)
-                          ? const Icon(
-                              Icons.camera_alt,
-                              size: 30.0,
-                              color: AppColors.primary,
-                            )
-                          : null,
-                    );
-                  }),
-                  const SizedBox(height: 8.0),
-                  const Text(
-                    'Tap to choose a profile photo',
-                    style: AppTextStyles.caption,
-                  ),
-                ],
+                            : null,
+                      );
+                    }),
+                    const SizedBox(height: 8.0),
+                    const Text(
+                      'Tap to choose a profile photo',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
 
-          // Username Field
-          AppField(
-            label: 'Username',
-            controller: controller.usernameController,
-            placeholder: 'unique.username',
-          ),
-          const SizedBox(height: 20.0),
+            // Username Field
+            AppField(
+              label: 'Username',
+              controller: controller.usernameController,
+              placeholder: 'unique.username',
+            ),
+            const SizedBox(height: 20.0),
 
-          // Choose Interests
-          const Text('Choose interests', style: AppTextStyles.title),
-          const SizedBox(height: 8.0),
-          Obx(() => Wrap(
+            // Choose Interests
+            const Text('Choose interests', style: AppTextStyles.title),
+            const SizedBox(height: 8.0),
+            Obx(
+              () => Wrap(
                 spacing: 9.0,
                 runSpacing: 9.0,
                 children: AppData.interests.map((x) {
@@ -96,13 +110,15 @@ class BasicProfileView extends GetView<BasicProfileController> {
                     onPressed: () => controller.toggleInterest(x),
                   );
                 }).toList(),
-              )),
-          const SizedBox(height: 20.0),
+              ),
+            ),
+            const SizedBox(height: 20.0),
 
-          // Languages
-          const Text('Languages', style: AppTextStyles.title),
-          const SizedBox(height: 8.0),
-          Obx(() => Wrap(
+            // Languages
+            const Text('Languages', style: AppTextStyles.title),
+            const SizedBox(height: 8.0),
+            Obx(
+              () => Wrap(
                 spacing: 9.0,
                 runSpacing: 9.0,
                 children: AppData.languages.map((x) {
@@ -112,29 +128,31 @@ class BasicProfileView extends GetView<BasicProfileController> {
                     onPressed: () => controller.toggleLanguage(x),
                   );
                 }).toList(),
-              )),
-          const SizedBox(height: 20.0),
+              ),
+            ),
+            const SizedBox(height: 20.0),
 
-          // Date of birth
-          AppField(
-            label: 'Date of birth (optional)',
-            controller: controller.dobController,
-            placeholder: 'YYYY-MM-DD',
-          ),
-          const SizedBox(height: 16.0),
+            // Date of birth
+            AppField(
+              label: 'Date of birth (optional)',
+              controller: controller.dobController,
+              placeholder: 'YYYY-MM-DD',
+            ),
+            const SizedBox(height: 16.0),
 
-          // Gender
-          AppField(
-            label: 'Gender (optional)',
-            controller: controller.genderController,
-            placeholder: 'Your gender',
-          ),
-          const SizedBox(height: 20.0),
+            // Gender
+            AppField(
+              label: 'Gender (optional)',
+              controller: controller.genderController,
+              placeholder: 'Your gender',
+            ),
+            const SizedBox(height: 20.0),
 
-          // Conversation Topics
-          const Text('Conversation topics', style: AppTextStyles.title),
-          const SizedBox(height: 8.0),
-          Obx(() => Wrap(
+            // Conversation Topics
+            const Text('Conversation topics', style: AppTextStyles.title),
+            const SizedBox(height: 8.0),
+            Obx(
+              () => Wrap(
                 spacing: 9.0,
                 runSpacing: 9.0,
                 children: AppData.conversationTopics.map((topic) {
@@ -144,41 +162,42 @@ class BasicProfileView extends GetView<BasicProfileController> {
                     onPressed: () => controller.toggleTopic(topic),
                   );
                 }).toList(),
-              )),
-          const SizedBox(height: 20.0),
+              ),
+            ),
+            const SizedBox(height: 20.0),
 
-          // Errors
-          Obx(() {
-            final err = controller.error.value;
-            if (err.isEmpty) return const SizedBox.shrink();
-            return Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12.0),
-                  decoration: BoxDecoration(
-                    color: AppColors.danger.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12.0),
+            // Errors
+            Obx(() {
+              final err = controller.error.value;
+              if (err.isEmpty) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12.0),
+                    decoration: BoxDecoration(
+                      color: AppColors.danger.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Text(err, style: AppTextStyles.error),
                   ),
-                  child: Text(
-                    err,
-                    style: AppTextStyles.error,
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-              ],
-            );
-          }),
+                  const SizedBox(height: 16.0),
+                ],
+              );
+            }),
 
-          // Finish Button
-          Obx(() => AppButton(
+            // Finish Button
+            Obx(
+              () => AppButton(
                 title: 'Open VibeCircle',
                 loading: controller.saving.value,
                 disabled: controller.saving.value,
                 onPressed: () => controller.finish(),
-              )),
-          const SizedBox(height: 24.0),
-        ],
+              ),
+            ),
+            const SizedBox(height: 24.0),
+          ],
+        ),
       ),
     );
   }

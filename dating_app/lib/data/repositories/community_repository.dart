@@ -1,6 +1,5 @@
 import '../../core/network/network_api_service.dart';
 import '../../core/constants/api_urls.dart';
-import '../models/community.dart';
 import '../models/post.dart';
 import '../models/comment.dart';
 
@@ -16,7 +15,10 @@ class CommunityRepository {
     final Map<String, dynamic> params = {};
     if (communityId != null) params['community_id'] = communityId;
     if (before != null) params['before'] = before;
-    final response = await _apiService.get(ApiUrls.feedPosts, queryParameters: params);
+    final response = await _apiService.get(
+      ApiUrls.feedPosts,
+      queryParameters: params,
+    );
     final list = response.data as List? ?? [];
     return list.map((e) => Post.fromJson(e as Map<String, dynamic>)).toList();
   }
@@ -34,11 +36,15 @@ class CommunityRepository {
     await _apiService.delete(ApiUrls.postDetails(postId));
   }
 
-  Future<Map<String, dynamic>> addComment(String postId, String body, {String? parentId}) async {
-    final response = await _apiService.post(ApiUrls.postComments(postId), data: {
-      'body': body,
-      'parent_id': ?parentId,
-    });
+  Future<Map<String, dynamic>> addComment(
+    String postId,
+    String body, {
+    String? parentId,
+  }) async {
+    final response = await _apiService.post(
+      ApiUrls.postComments(postId),
+      data: {'body': body, 'parent_id': ?parentId},
+    );
     return response.data as Map<String, dynamic>;
   }
 
@@ -51,14 +57,19 @@ class CommunityRepository {
   }
 
   Future<Map<String, dynamic>> vote(String postId, String option) async {
-    final response = await _apiService.post(ApiUrls.votePost(postId), data: {'option': option});
+    final response = await _apiService.post(
+      ApiUrls.votePost(postId),
+      data: {'option': option},
+    );
     return response.data as Map<String, dynamic>;
   }
 
   Future<List<Comment>> comments(String postId) async {
     final response = await _apiService.get(ApiUrls.postComments(postId));
     final list = response.data as List? ?? [];
-    return list.map((e) => Comment.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => Comment.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> toggleLike(String postId) async {
@@ -74,7 +85,9 @@ class CommunityRepository {
     return response.data as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> createCommunity(Map<String, dynamic> payload) async {
+  Future<Map<String, dynamic>> createCommunity(
+    Map<String, dynamic> payload,
+  ) async {
     final response = await _apiService.post(ApiUrls.communities, data: payload);
     return response.data as Map<String, dynamic>;
   }
@@ -92,11 +105,17 @@ class CommunityRepository {
   }
 
   Future<void> shareCommunity(String id, List<String> userIds) async {
-    await _apiService.post(ApiUrls.shareCommunity(id), data: {'user_ids': userIds});
+    await _apiService.post(
+      ApiUrls.shareCommunity(id),
+      data: {'user_ids': userIds},
+    );
   }
 
   Future<void> sharePost(String postId, List<String> userIds) async {
-    await _apiService.post(ApiUrls.sharePost(postId), data: {'user_ids': userIds});
+    await _apiService.post(
+      ApiUrls.sharePost(postId),
+      data: {'user_ids': userIds},
+    );
   }
 
   Future<List<dynamic>> circleInvites() async {
@@ -105,11 +124,17 @@ class CommunityRepository {
   }
 
   Future<void> inviteToCircle(String communityId, String userId) async {
-    await _apiService.post(ApiUrls.inviteToCircle(communityId), data: {'user_id': userId});
+    await _apiService.post(
+      ApiUrls.inviteToCircle(communityId),
+      data: {'user_id': userId},
+    );
   }
 
   Future<void> respondCircleInvite(String inviteId, String action) async {
-    await _apiService.patch(ApiUrls.circleInviteAction(inviteId), data: {'action': action});
+    await _apiService.patch(
+      ApiUrls.circleInviteAction(inviteId),
+      data: {'action': action},
+    );
   }
 
   Future<List<dynamic>> communityJoinRequests(String id) async {
@@ -117,12 +142,25 @@ class CommunityRepository {
     return response.data as List? ?? [];
   }
 
-  Future<void> respondCommunityJoinRequest(String communityId, String requestId, String action) async {
-    await _apiService.patch(ApiUrls.communityJoinRequestsAction(communityId, requestId), data: {'action': action});
+  Future<void> respondCommunityJoinRequest(
+    String communityId,
+    String requestId,
+    String action,
+  ) async {
+    await _apiService.patch(
+      ApiUrls.communityJoinRequestsAction(communityId, requestId),
+      data: {'action': action},
+    );
   }
 
-  Future<Map<String, dynamic>> sendCommunityMessage(String id, Map<String, dynamic> payload) async {
-    final response = await _apiService.post(ApiUrls.sendCommunityMessage(id), data: payload);
+  Future<Map<String, dynamic>> sendCommunityMessage(
+    String id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _apiService.post(
+      ApiUrls.sendCommunityMessage(id),
+      data: payload,
+    );
     return response.data as Map<String, dynamic>;
   }
 
@@ -131,16 +169,24 @@ class CommunityRepository {
     return response.data as List? ?? [];
   }
 
-  Future<Map<String, dynamic>> communitySubscriptionStatus(String communityId) async {
-    final response = await _apiService.get(ApiUrls.communitySubscriptionStatus(communityId));
+  Future<Map<String, dynamic>> communitySubscriptionStatus(
+    String communityId,
+  ) async {
+    final response = await _apiService.get(
+      ApiUrls.communitySubscriptionStatus(communityId),
+    );
     return response.data as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> tipPost(String postId, double amount, {String? message}) async {
-    final response = await _apiService.post(ApiUrls.tipPost(postId), data: {
-      'amount': amount,
-      'message': ?message,
-    });
+  Future<Map<String, dynamic>> tipPost(
+    String postId,
+    double amount, {
+    String? message,
+  }) async {
+    final response = await _apiService.post(
+      ApiUrls.tipPost(postId),
+      data: {'amount': amount, 'message': ?message},
+    );
     return response.data as Map<String, dynamic>;
   }
 
@@ -154,8 +200,14 @@ class CommunityRepository {
     return response.data as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> awardBounty(String postId, String commentId) async {
-    final response = await _apiService.post(ApiUrls.awardBounty(postId), data: {'comment_id': commentId});
+  Future<Map<String, dynamic>> awardBounty(
+    String postId,
+    String commentId,
+  ) async {
+    final response = await _apiService.post(
+      ApiUrls.awardBounty(postId),
+      data: {'comment_id': commentId},
+    );
     return response.data as Map<String, dynamic>;
   }
 

@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/app_button.dart';
@@ -8,6 +10,8 @@ import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_screen.dart';
 import '../../../core/widgets/app_pill.dart';
 import '../controllers/community_controller.dart';
+import '../../../core/network/network_api_service.dart';
+import '../../../core/constants/api_urls.dart';
 import '../../../routes/app_routes.dart';
 
 class CreateCommunityView extends StatefulWidget {
@@ -19,16 +23,21 @@ class CreateCommunityView extends StatefulWidget {
 
 class _CreateCommunityViewState extends State<CreateCommunityView> {
   final CommunityController _communityController = Get.find<CommunityController>();
+  final ImagePicker _picker = ImagePicker();
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _rulesController = TextEditingController(text: 'Be kind. Stay on topic. No spam.');
   final TextEditingController _tagsController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _langController = TextEditingController(text: 'English');
 
   String _privacy = 'Public';
   String _themeColor = '#5B5CE2';
   bool _creating = false;
+  File? _logoFile;
+  File? _coverFile;
 
   final List<String> _colorOptions = ['#5B5CE2', '#2FA89A', '#F06A6A', '#E79B32', '#2878D4'];
 
@@ -39,7 +48,23 @@ class _CreateCommunityViewState extends State<CreateCommunityView> {
     _categoryController.dispose();
     _rulesController.dispose();
     _tagsController.dispose();
+    _locationController.dispose();
+    _langController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickLogo() async {
+    final XFile? file = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (file != null) {
+      setState(() => _logoFile = File(file.path));
+    }
+  }
+
+  Future<void> _pickCover() async {
+    final XFile? file = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (file != null) {
+      setState(() => _coverFile = File(file.path));
+    }
   }
 
   void _create() async {
@@ -55,14 +80,31 @@ class _CreateCommunityViewState extends State<CreateCommunityView> {
     setState(() => _creating = true);
 
     try {
+      String? logoUrl;
+      String? coverUrl;
+
+      if (_logoFile != null) {
+        final res = await NetworkApiService.instance.uploadFile(ApiUrls.uploads, _logoFile!);
+        logoUrl = res.data['url'] as String?;
+      }
+      if (_coverFile != null) {
+        final res = await NetworkApiService.instance.uploadFile(ApiUrls.uploads, _coverFile!);
+        coverUrl = res.data['url'] as String?;
+      }
+
       final payload = {
         'name': name,
         'description': desc,
         'category': cat,
-        'is_private': _privacy == 'Private',
-        'theme_color': _themeColor,
-        'rules': _rulesController.text.split('.').map((x) => x.trim()).where((x) => x.isNotEmpty).toList(),
+        'privacy': _privacy == 'Private' ? 'private' : 'public',
+        'premium_price': 0,
+        'rules': _rulesController.text.split(RegExp(r'[.\n]')).map((x) => x.trim()).where((x) => x.isNotEmpty).toList(),
         'tags': _tagsController.text.split(',').map((x) => x.trim()).where((x) => x.isNotEmpty).toList(),
+        'location': _locationController.text.trim().isNotEmpty ? _locationController.text.trim() : null,
+        'language': _langController.text.trim().isNotEmpty ? _langController.text.trim() : null,
+        'color': _themeColor,
+        'logo_url': logoUrl,
+        'cover_url': coverUrl,
       };
 
       final newComm = await _communityController.createCommunity(payload);
@@ -90,7 +132,7 @@ class _CreateCommunityViewState extends State<CreateCommunityView> {
         onBack: () => Get.back(),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -158,12 +200,56 @@ class _CreateCommunityViewState extends State<CreateCommunityView> {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 12.0),
+            const SizedBox(height: 16.0),
+
+            const Text('Community Assets', style: AppTextStyles.h2),
+            const SizedBox(height: 8.0),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    title: _logoFile != null ? 'Logo Selected 🖼️' : 'Choose logo',
+                    tone: AppButtonTone.secondary,
+                    onPressed: _pickLogo,
+                  ),
+                ),
+                const SizedBox(width: 10.0),
+                Expanded(
+                  child: AppButton(
+                    title: _coverFile != null ? 'Cover Selected 🖼️' : 'Choose cover',
+                    tone: AppButtonTone.secondary,
+                    onPressed: _pickCover,
+                  ),
+                ),
+              ],
+            ),
+            if (_coverFile != null) ...[
+              const SizedBox(height: 12.0),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16.0),
+                child: Image.file(_coverFile!, height: 150.0, width: double.infinity, fit: BoxFit.cover),
+              ),
+            ],
+            const SizedBox(height: 16.0),
 
             AppField(
               label: 'Tags',
               placeholder: 'technology, learning, local',
               controller: _tagsController,
+            ),
+            const SizedBox(height: 12.0),
+
+            AppField(
+              label: 'Location (optional)',
+              placeholder: 'Delhi, India',
+              controller: _locationController,
+            ),
+            const SizedBox(height: 12.0),
+
+            AppField(
+              label: 'Primary language',
+              placeholder: 'Hindi',
+              controller: _langController,
             ),
             const SizedBox(height: 20.0),
 

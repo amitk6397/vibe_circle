@@ -14,6 +14,19 @@ class CallRepository {
     return res.data as Map<String, dynamic>;
   }
 
+  /// Fetch Agora token for a call session.
+  /// Returns: { appId, token, channel, userAccount, uid }
+  Future<Map<String, dynamic>> getToken(String id) async {
+    final res = await _apiService.get(ApiUrls.callToken(id));
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Notify backend that the local user has successfully joined the Agora channel.
+  Future<Map<String, dynamic>> joinCall(String id) async {
+    final res = await _apiService.post(ApiUrls.callJoin(id));
+    return res.data as Map<String, dynamic>;
+  }
+
   Future<Map<String, dynamic>> action(String id, String actionName) async {
     final res = await _apiService.post(ApiUrls.callAction(id, actionName));
     return res.data as Map<String, dynamic>;

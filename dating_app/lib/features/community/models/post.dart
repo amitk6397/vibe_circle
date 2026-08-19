@@ -84,23 +84,31 @@ class Post {
 
   factory Post.fromJson(Map<String, dynamic> json) {
     final rawId = json['id'].toString();
-    final rawCommId = json['community_id']?.toString() ?? json['community']?.toString() ?? '';
+    final rawCommId = json['community_id']?.toString() ?? '';
+    final rawCommName = json['community_name']?.toString() ?? json['community']?.toString() ?? '';
     final rawAuthId = json['author_id']?.toString() ?? '';
     final rawAuthName = json['author_name'] ?? json['author'] ?? 'User';
     final rawAvatar = json['author_avatar'] ?? json['author_avatar_url'];
     final rawContent = json['content'] ?? json['body'] ?? '';
-    final lCount = json['likes_count'] ?? json['likes'] ?? 0;
-    final cCount = json['comments_count'] ?? json['comments'] ?? 0;
+    final lCount = json['like_count'] ?? json['likes_count'] ?? json['likes'] ?? 0;
+    final cCount = json['comment_count'] ?? json['comments_count'] ?? json['comments'] ?? 0;
     final isL = json['is_liked'] ?? json['liked'] ?? false;
     final isS = json['saved'] ?? false;
     final isM = json['mine'] ?? false;
     final isA = json['anonymous'] ?? false;
     final rawType = json['post_type'] ?? json['postType'] ?? 'Text';
 
+    List<String> parsedMediaUrls = [];
+    if (json['media_urls'] is List) {
+      parsedMediaUrls = (json['media_urls'] as List).map((e) => e.toString()).toList();
+    } else if (json['media_url'] != null && json['media_url'].toString().isNotEmpty) {
+      parsedMediaUrls = [json['media_url'].toString()];
+    }
+
     return Post(
       id: rawId,
       communityId: rawCommId,
-      community: rawCommId,
+      community: rawCommName.isNotEmpty ? rawCommName : 'Discover',
       authorId: rawAuthId,
       authorName: rawAuthName,
       author: rawAuthName,
@@ -109,7 +117,7 @@ class Post {
       authorUsername: json['author_username'] ?? json['authorUsername'] ?? '',
       content: rawContent,
       body: rawContent,
-      mediaUrls: (json['media_urls'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      mediaUrls: parsedMediaUrls,
       likesCount: lCount,
       likes: lCount,
       commentsCount: cCount,

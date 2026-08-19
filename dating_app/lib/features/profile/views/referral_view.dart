@@ -1,11 +1,12 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_screen.dart';
 import '../controllers/profile_controller.dart';
@@ -50,7 +51,8 @@ class _ReferralViewState extends State<ReferralView> {
     final info = _profileController.referralInfo;
     final code = info['referralCode'] ?? '';
     final inviteeBonus = info['inviteeBonus'] ?? 20;
-    final inviteText = '🎉 Join me on VibeCircle! Use my referral code **$code** when signing up and get $inviteeBonus bonus coins for free! Download the app now.';
+    final inviteText =
+        '🎉 Join me on VibeCircle! Use my referral code **$code** when signing up and get $inviteeBonus bonus coins for free! Download the app now.';
     Clipboard.setData(ClipboardData(text: inviteText));
     Get.snackbar(
       'Invitation Copied!',
@@ -66,7 +68,8 @@ class _ReferralViewState extends State<ReferralView> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Obx(() {
-        if (_profileController.loading.value && _profileController.referralInfo.isEmpty) {
+        if (_profileController.loading.value &&
+            _profileController.referralInfo.isEmpty) {
           return AppScreen(
             header: const AppHeader(title: 'Refer & Earn'),
             child: const Center(child: CircularProgressIndicator()),
@@ -81,10 +84,7 @@ class _ReferralViewState extends State<ReferralView> {
         final num inviteeBonus = info['inviteeBonus'] ?? 20;
 
         return AppScreen(
-          header: AppHeader(
-            title: 'Refer & Earn',
-            onBack: () => Get.back(),
-          ),
+          header: AppHeader(title: 'Refer & Earn', onBack: () => Get.back()),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
@@ -103,7 +103,11 @@ class _ReferralViewState extends State<ReferralView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.card_giftcard, size: 40.0, color: Colors.white70),
+                      const Icon(
+                        Icons.card_giftcard,
+                        size: 40.0,
+                        color: Colors.white70,
+                      ),
                       const SizedBox(height: 12.0),
                       const Text(
                         'Invite Friends,\nEarn Coins!',
@@ -117,7 +121,11 @@ class _ReferralViewState extends State<ReferralView> {
                       const SizedBox(height: 10.0),
                       Text(
                         'You earn $perReferral coins for each friend who joins.\nThey get $inviteeBonus free coins too!',
-                        style: const TextStyle(color: Colors.white70, fontSize: 13.0, height: 1.4),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13.0,
+                          height: 1.4,
+                        ),
                       ),
                     ],
                   ),
@@ -125,12 +133,20 @@ class _ReferralViewState extends State<ReferralView> {
                 const SizedBox(height: 20.0),
                 const Text(
                   'YOUR REFERRAL CODE',
-                  style: TextStyle(color: AppColors.muted, fontSize: 10.0, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                  style: TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 10.0,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6.0),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 12.0,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(16.0),
@@ -149,9 +165,16 @@ class _ReferralViewState extends State<ReferralView> {
                       ),
                       MaterialButton(
                         onPressed: _copyCode,
-                        color: _copied ? const Color(0xFF10B981) : AppColors.surfaceAlt,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                        color: _copied
+                            ? const Color(0xFF10B981)
+                            : AppColors.surfaceAlt,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 10.0,
+                        ),
                         child: Row(
                           children: [
                             Icon(
@@ -163,7 +186,9 @@ class _ReferralViewState extends State<ReferralView> {
                             Text(
                               _copied ? 'Copied!' : 'Copy',
                               style: TextStyle(
-                                color: _copied ? Colors.white : AppColors.primary,
+                                color: _copied
+                                    ? Colors.white
+                                    : AppColors.primary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12.0,
                               ),
@@ -175,37 +200,68 @@ class _ReferralViewState extends State<ReferralView> {
                   ),
                 ),
                 const SizedBox(height: 12.0),
-                AppButton(
-                  title: 'Share with Friends',
-                  onPressed: _shareCode,
-                ),
+                AppButton(title: 'Share with Friends', onPressed: _shareCode),
                 const SizedBox(height: 22.0),
                 Row(
                   children: [
                     Expanded(
-                      child: _buildStatCard(Icons.people_outline, '$referrals', 'Friends\nInvited', AppColors.primary),
+                      child: _buildStatCard(
+                        Icons.people_outline,
+                        '$referrals',
+                        'Friends\nInvited',
+                        AppColors.primary,
+                      ),
                     ),
                     const SizedBox(width: 10.0),
                     Expanded(
-                      child: _buildStatCard(Icons.monetization_on_outlined, '+$totalEarned', 'Coins\nEarned', const Color(0xFFD97706)),
+                      child: _buildStatCard(
+                        Icons.monetization_on_outlined,
+                        '+$totalEarned',
+                        'Coins\nEarned',
+                        const Color(0xFFD97706),
+                      ),
                     ),
                     const SizedBox(width: 10.0),
                     Expanded(
-                      child: _buildStatCard(Icons.star_border, '$perReferral', 'Per\nReferral', const Color(0xFF059669)),
+                      child: _buildStatCard(
+                        Icons.star_border,
+                        '$perReferral',
+                        'Per\nReferral',
+                        const Color(0xFF059669),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 22.0),
                 const Text('How it works', style: AppTextStyles.h2),
                 const SizedBox(height: 12.0),
-                _buildHowStep(1, '🔗', 'Share Your Code', 'Send your unique referral code to friends.'),
-                _buildHowStep(2, '👤', 'Friend Joins', 'They sign up and get a welcome coin bonus too!'),
-                _buildHowStep(3, '🪙', 'You Earn Coins', 'Coins are instantly credited to your wallet.'),
+                _buildHowStep(
+                  1,
+                  '🔗',
+                  'Share Your Code',
+                  'Send your unique referral code to friends.',
+                ),
+                _buildHowStep(
+                  2,
+                  '👤',
+                  'Friend Joins',
+                  'They sign up and get a welcome coin bonus too!',
+                ),
+                _buildHowStep(
+                  3,
+                  '🪙',
+                  'You Earn Coins',
+                  'Coins are instantly credited to your wallet.',
+                ),
                 const SizedBox(height: 16.0),
                 const Text(
                   'Coins are credited instantly upon your referral\'s successful signup. '
                   'Referral bonuses are subject to VibeCircle\'s fair usage policy.',
-                  style: TextStyle(color: AppColors.muted, fontSize: 11.0, height: 1.4),
+                  style: TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 11.0,
+                    height: 1.4,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24.0),
@@ -217,7 +273,12 @@ class _ReferralViewState extends State<ReferralView> {
     );
   }
 
-  Widget _buildStatCard(IconData icon, String value, String label, Color color) {
+  Widget _buildStatCard(
+    IconData icon,
+    String value,
+    String label,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
@@ -235,12 +296,20 @@ class _ReferralViewState extends State<ReferralView> {
           const SizedBox(height: 8.0),
           Text(
             value,
-            style: TextStyle(color: color, fontSize: 18.0, fontWeight: FontWeight.w900),
+            style: TextStyle(
+              color: color,
+              fontSize: 18.0,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 4.0),
           Text(
             label,
-            style: const TextStyle(color: AppColors.muted, fontSize: 10.5, height: 1.2),
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontSize: 10.5,
+              height: 1.2,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -259,7 +328,11 @@ class _ReferralViewState extends State<ReferralView> {
             backgroundColor: AppColors.surfaceAlt,
             child: Text(
               '$num',
-              style: const TextStyle(color: AppColors.text, fontSize: 11.0, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: AppColors.text,
+                fontSize: 11.0,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 8.0),
@@ -271,12 +344,19 @@ class _ReferralViewState extends State<ReferralView> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(color: AppColors.text, fontSize: 13.0, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontSize: 13.0,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 2.0),
                 Text(
                   desc,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 11.5),
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 11.5,
+                  ),
                 ),
               ],
             ),

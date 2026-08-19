@@ -8,6 +8,7 @@ import '../../../core/widgets/app_empty_state.dart';
 import '../../community/widgets/post_card.dart';
 import '../../discovery/models/person.dart';
 import '../../../routes/app_routes.dart';
+import '../../../core/utils/helpers.dart';
 
 import '../../auth/controllers/auth_controller.dart';
 import '../../community/controllers/community_controller.dart';
@@ -28,6 +29,9 @@ class HomeView extends GetView<HomeController> {
       final double shiftOffset = controller.storyRailOpen.value
           ? (controller.storyRailSide.value == 'left' ? 102.0 : -102.0)
           : 0.0;
+      final discoverPosts = communityController.posts
+          .where((post) => post.community == 'Discover')
+          .toList();
 
       return Scaffold(
         backgroundColor: AppColors.bg,
@@ -96,7 +100,7 @@ class HomeView extends GetView<HomeController> {
                                                   image: currentAvatar != null
                                                       ? DecorationImage(
                                                           image: NetworkImage(
-                                                            currentAvatar,
+                                                            Helpers.resolveImageUrl(currentAvatar) ?? '',
                                                           ),
                                                           fit: BoxFit.cover,
                                                         )
@@ -176,7 +180,7 @@ class HomeView extends GetView<HomeController> {
                                             backgroundColor:
                                                 AppColors.surfaceAlt,
                                             backgroundImage: NetworkImage(
-                                              story['media_url'],
+                                              Helpers.resolveImageUrl(story['media_url']) ?? '',
                                             ),
                                           ),
                                         ),
@@ -212,8 +216,29 @@ class HomeView extends GetView<HomeController> {
               right: -shiftOffset,
               top: 0,
               bottom: 0,
-              child: Container(
-                color: AppColors.bg,
+              child: GestureDetector(
+                onHorizontalDragEnd: (details) {
+                  final velocity = details.primaryVelocity ?? 0.0;
+                  if (controller.storyRailSide.value == 'left') {
+                    if (velocity > 300) {
+                      // Swipe right -> Open left rail
+                      controller.storyRailOpen.value = true;
+                    } else if (velocity < -300) {
+                      // Swipe left -> Close left rail
+                      controller.storyRailOpen.value = false;
+                    }
+                  } else if (controller.storyRailSide.value == 'right') {
+                    if (velocity < -300) {
+                      // Swipe left -> Open right rail
+                      controller.storyRailOpen.value = true;
+                    } else if (velocity > 300) {
+                      // Swipe right -> Close right rail
+                      controller.storyRailOpen.value = false;
+                    }
+                  }
+                },
+                child: Container(
+                  color: AppColors.bg,
                 child: SafeArea(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -229,13 +254,16 @@ class HomeView extends GetView<HomeController> {
                           children: [
                             Row(
                               children: [
-                                AppAvatar(
-                                  name:
-                                      authController.profile.value?.name ??
-                                      'You',
-                                  avatarUrl:
-                                      authController.profile.value?.avatarUrl,
-                                  size: 44.0,
+                                GestureDetector(
+                                  onTap: () => controller.changeTab(4),
+                                  child: AppAvatar(
+                                    name:
+                                        authController.profile.value?.name ??
+                                        'You',
+                                    avatarUrl:
+                                        authController.profile.value?.avatarUrl,
+                                    size: 44.0,
+                                  ),
                                 ),
                                 const SizedBox(width: 10.0),
                                 Column(
@@ -445,7 +473,7 @@ class HomeView extends GetView<HomeController> {
                                     ),
                                     const SizedBox(height: 4.0),
 
-                                    if (communityController.posts.isEmpty)
+                                    if (discoverPosts.isEmpty)
                                       const AppEmptyState(
                                         icon: Icons.article_outlined,
                                         title: 'No posts yet',
@@ -453,7 +481,7 @@ class HomeView extends GetView<HomeController> {
                                             'Join a community and create the first post.',
                                       )
                                     else
-                                      ...communityController.posts.map((post) {
+                                      ...discoverPosts.map((post) {
                                         return PostCard(
                                           post: post,
                                           onPressed: () => Get.toNamed(
@@ -473,13 +501,15 @@ class HomeView extends GetView<HomeController> {
                   ),
                 ),
               ),
+              ),
             ),
 
             // 3. Floating handle to slide stories open/closed
             if (!controller.storyRailOpen.value)
               Positioned(
-                left: controller.storyRailSide.value == 'left' ? 0.0 : null,
-                right: controller.storyRailSide.value == 'right' ? 0.0 : null,
+                left: controller.storyHandleX.value == 0.0 && controller.storyRailSide.value == 'right'
+                    ? MediaQuery.of(context).size.width - 24.0
+                    : controller.storyHandleX.value,
                 top: controller.storyHandleY.value,
                 child: GestureDetector(
                   onVerticalDragUpdate: (details) {
@@ -489,14 +519,16 @@ class HomeView extends GetView<HomeController> {
                           MediaQuery.of(context).size.height - 210.0,
                         );
                   },
+                  onHorizontalDragUpdate: (details) {
+                    controller.storyHandleX.value = (details.globalPosition.dx - 12.0).clamp(0.0, MediaQuery.of(context).size.width - 24.0);
+                  },
                   onHorizontalDragEnd: (details) {
-                    // Switch side if dragged past center
-                    if (details.primaryVelocity != null) {
-                      if (details.primaryVelocity! > 300) {
-                        controller.storyRailSide.value = 'right';
-                      } else if (details.primaryVelocity! < -300) {
-                        controller.storyRailSide.value = 'left';
-                      }
+                    if (controller.storyHandleX.value < MediaQuery.of(context).size.width / 2) {
+                      controller.storyRailSide.value = 'left';
+                      controller.storyHandleX.value = 0.0;
+                    } else {
+                      controller.storyRailSide.value = 'right';
+                      controller.storyHandleX.value = MediaQuery.of(context).size.width - 24.0;
                     }
                   },
                   child: InkWell(
@@ -704,7 +736,7 @@ class HomeView extends GetView<HomeController> {
             // Background image or gradient
             Positioned.fill(
               child: person.avatarUrl != null && person.avatarUrl!.isNotEmpty
-                  ? Image.network(person.avatarUrl!, fit: BoxFit.cover)
+                  ? Image.network(Helpers.resolveImageUrl(person.avatarUrl!) ?? '', fit: BoxFit.cover)
                   : Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -858,7 +890,7 @@ class HomeView extends GetView<HomeController> {
         children: [
           // Story Image Content
           Positioned.fill(
-            child: Image.network(story['media_url'], fit: BoxFit.contain),
+            child: Image.network(Helpers.resolveImageUrl(story['media_url']) ?? '', fit: BoxFit.contain),
           ),
 
           // Shadows overlay
@@ -943,7 +975,7 @@ class HomeView extends GetView<HomeController> {
                   backgroundImage:
                       story['author_avatar_url'] != null &&
                           story['author_avatar_url'].isNotEmpty
-                      ? NetworkImage(story['author_avatar_url'])
+                      ? NetworkImage(Helpers.resolveImageUrl(story['author_avatar_url']) ?? '')
                       : null,
                   child:
                       story['author_avatar_url'] == null ||

@@ -4,7 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import 'home_view.dart';
 import '../../discovery/views/discover_view.dart';
 import '../../chat/views/inbox_view.dart';
-import '../../profile/views/my_profile_view.dart';
+import '../../profile/views/profile_view.dart';
 import '../../matching/views/connect_view.dart';
 import '../controllers/home_controller.dart';
 import '../../chat/controllers/chat_controller.dart';
@@ -17,7 +17,7 @@ class MainTabsView extends GetView<HomeController> {
     const DiscoverView(),
     const ConnectView(),
     const InboxView(),
-    const MyProfileView(),
+    const ProfileView(),
   ];
 
   @override

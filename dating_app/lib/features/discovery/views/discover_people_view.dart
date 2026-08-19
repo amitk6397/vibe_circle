@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/utils/helpers.dart';
 
 class DiscoverPeopleView extends StatelessWidget {
   const DiscoverPeopleView({super.key});
@@ -49,7 +50,7 @@ class DiscoverPeopleView extends StatelessWidget {
                 ),
                 itemCount: people.length,
                 itemBuilder: (context, index) {
-                  final person = people[index] as Map;
+                  final person = people[index] as Map<String, dynamic>;
                   return _PersonGridCard(
                     person: person,
                     onPress: () => Get.toNamed('/public-profile', arguments: {'personId': person['id']}),
@@ -62,7 +63,7 @@ class DiscoverPeopleView extends StatelessWidget {
 }
 
 class _PersonGridCard extends StatelessWidget {
-  final Map person;
+  final Map<String, dynamic> person;
   final VoidCallback onPress;
   const _PersonGridCard({required this.person, required this.onPress});
 
@@ -82,7 +83,7 @@ class _PersonGridCard extends StatelessWidget {
             CircleAvatar(
               radius: 36,
               backgroundColor: AppColors.primary.withValues(alpha: 0.3),
-              backgroundImage: person['avatarUrl'] != null ? NetworkImage(person['avatarUrl'].toString()) : null,
+              backgroundImage: person['avatarUrl'] != null ? NetworkImage(Helpers.resolveImageUrl(person['avatarUrl'].toString()) ?? '') : null,
               child: person['avatarUrl'] == null
                   ? Text(
                       (person['name']?.toString() ?? '?').isNotEmpty

@@ -16,6 +16,12 @@ class ProfileController extends GetxController {
   final RxString busyAction = ''.obs;
   final RxMap referralInfo = {}.obs;
 
+  @override
+  void onInit() {
+    super.onInit();
+    loadConnections();
+  }
+
   Future<void> loadConnections() async {
     loading.value = true;
     error.value = '';

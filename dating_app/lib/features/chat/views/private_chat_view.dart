@@ -1,17 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../../core/network/websocket_service.dart';
 import '../../../core/constants/api_urls.dart';
 import '../../../core/widgets/app_avatar.dart';
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_icon_button.dart';
-import '../../../core/widgets/app_screen.dart';
 import '../../../core/widgets/app_button.dart';
 import '../controllers/chat_controller.dart';
 import '../models/message.dart';
@@ -175,7 +174,10 @@ class _PrivateChatViewState extends State<PrivateChatView> {
       buttonColor: AppColors.primary,
       onConfirm: () {
         Get.back();
-        Get.offNamed(AppRoutes.PUBLIC_PROFILE, arguments: {'personId': _personId});
+        Get.offNamed(
+          AppRoutes.PUBLIC_PROFILE,
+          arguments: {'personId': _personId},
+        );
       },
     );
   }
@@ -205,7 +207,11 @@ class _PrivateChatViewState extends State<PrivateChatView> {
         if (_replyTo != null) 'reply_to_id': _replyTo!.id,
       };
 
-      final msg = await _chatController.sendMessage(_chatId, text, replyToId: _replyTo?.id);
+      final msg = await _chatController.sendMessage(
+        _chatId,
+        text,
+        replyToId: _replyTo?.id,
+      );
 
       setState(() {
         _replyTo = null;
@@ -214,7 +220,11 @@ class _PrivateChatViewState extends State<PrivateChatView> {
       _scrollToBottom();
       _loadLimits();
     } catch (e) {
-      Get.snackbar('Send failed', e.toString(), snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'Send failed',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 
@@ -229,15 +239,24 @@ class _PrivateChatViewState extends State<PrivateChatView> {
             children: [
               ListTile(
                 leading: const Icon(Icons.reply, color: AppColors.text),
-                title: const Text('Reply', style: TextStyle(color: AppColors.text)),
+                title: const Text(
+                  'Reply',
+                  style: TextStyle(color: AppColors.text),
+                ),
                 onTap: () {
                   Get.back();
                   setState(() => _replyTo = msg);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.sentiment_satisfied, color: AppColors.text),
-                title: const Text('React', style: TextStyle(color: AppColors.text)),
+                leading: const Icon(
+                  Icons.sentiment_satisfied,
+                  color: AppColors.text,
+                ),
+                title: const Text(
+                  'React',
+                  style: TextStyle(color: AppColors.text),
+                ),
                 onTap: () {
                   Get.back();
                   _showEmojiPicker(msg);
@@ -245,8 +264,14 @@ class _PrivateChatViewState extends State<PrivateChatView> {
               ),
               if (msg.mine)
                 ListTile(
-                  leading: const Icon(Icons.delete_outline, color: AppColors.danger),
-                  title: const Text('Delete message', style: TextStyle(color: AppColors.danger)),
+                  leading: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.danger,
+                  ),
+                  title: const Text(
+                    'Delete message',
+                    style: TextStyle(color: AppColors.danger),
+                  ),
                   onTap: () async {
                     Get.back();
                     try {
@@ -284,7 +309,11 @@ class _PrivateChatViewState extends State<PrivateChatView> {
           children: [
             const Text(
               'Select reaction emoji',
-              style: TextStyle(color: AppColors.text, fontSize: 16.0, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.text,
+                fontSize: 16.0,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16.0),
             Row(
@@ -294,12 +323,22 @@ class _PrivateChatViewState extends State<PrivateChatView> {
                   onTap: () async {
                     Get.back();
                     try {
-                      await _chatController.reactToMessage(_chatId, msg.id, emoji);
+                      await _chatController.reactToMessage(
+                        _chatId,
+                        msg.id,
+                        emoji,
+                      );
                       setState(() {
                         final idx = _messages.indexWhere((m) => m.id == msg.id);
                         if (idx != -1) {
-                          final currentReactions = Map<String, String>.from(msg.reactions ?? {});
-                          currentReactions[_authController.currentUserId.value ?? 'me'] = emoji;
+                          final currentReactions = Map<String, String>.from(
+                            msg.reactions ?? {},
+                          );
+                          currentReactions[_authController
+                                      .currentUserId
+                                      .value ??
+                                  'me'] =
+                              emoji;
                           _messages[idx] = msg.copyWith(
                             reactions: currentReactions,
                           );
@@ -309,10 +348,7 @@ class _PrivateChatViewState extends State<PrivateChatView> {
                       Get.snackbar('Reaction failed', e.toString());
                     }
                   },
-                  child: Text(
-                    emoji,
-                    style: const TextStyle(fontSize: 32.0),
-                  ),
+                  child: Text(emoji, style: const TextStyle(fontSize: 32.0)),
                 );
               }).toList(),
             ),
@@ -363,7 +399,10 @@ class _PrivateChatViewState extends State<PrivateChatView> {
           children: [
             // Chat Custom Header
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8.0,
+                vertical: 6.0,
+              ),
               color: AppColors.surface,
               child: Row(
                 children: [
@@ -371,11 +410,7 @@ class _PrivateChatViewState extends State<PrivateChatView> {
                     icon: Icons.arrow_back,
                     onPressed: () => Get.back(),
                   ),
-                  AppAvatar(
-                    name: _name,
-                    avatarUrl: _avatarUrl,
-                    size: 38.0,
-                  ),
+                  AppAvatar(name: _name, avatarUrl: _avatarUrl, size: 38.0),
                   const SizedBox(width: 10.0),
                   Expanded(
                     child: Column(
@@ -393,9 +428,12 @@ class _PrivateChatViewState extends State<PrivateChatView> {
                           _typing
                               ? 'Typing...'
                               : _connected
-                                  ? (_online ? 'Online · live' : 'Connected')
-                                  : 'Reconnecting...',
-                          style: const TextStyle(color: AppColors.primary, fontSize: 11.0),
+                              ? (_online ? 'Online · live' : 'Connected')
+                              : 'Reconnecting...',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 11.0,
+                          ),
                         ),
                       ],
                     ),
@@ -416,11 +454,18 @@ class _PrivateChatViewState extends State<PrivateChatView> {
             if (_sessionSeconds != null)
               Container(
                 color: AppColors.surfaceAlt,
-                padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 6.0,
+                  horizontal: 16.0,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.timer_outlined, color: AppColors.primary, size: 16.0),
+                    const Icon(
+                      Icons.timer_outlined,
+                      color: AppColors.primary,
+                      size: 16.0,
+                    ),
                     const SizedBox(width: 6.0),
                     Text(
                       '${(_sessionSeconds! ~/ 60).toString().padLeft(2, '0')}:'
@@ -445,27 +490,33 @@ class _PrivateChatViewState extends State<PrivateChatView> {
                       ),
                     )
                   : _messages.isEmpty
-                      ? const AppEmptyState(
-                          icon: Icons.chat_bubble_outline,
-                          title: 'Start the conversation',
-                          text: 'Say hello and mention why you wanted to connect.',
-                        )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                          itemCount: _messages.length,
-                          itemBuilder: (context, idx) {
-                            final msg = _messages[idx];
-                            return _buildMessageBubble(msg);
-                          },
-                        ),
+                  ? const AppEmptyState(
+                      icon: Icons.chat_bubble_outline,
+                      title: 'Start the conversation',
+                      text: 'Say hello and mention why you wanted to connect.',
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 12.0,
+                      ),
+                      itemCount: _messages.length,
+                      itemBuilder: (context, idx) {
+                        final msg = _messages[idx];
+                        return _buildMessageBubble(msg);
+                      },
+                    ),
             ),
 
             // Reply Quote preview header
             if (_replyTo != null)
               Container(
                 color: AppColors.surface,
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -474,11 +525,20 @@ class _PrivateChatViewState extends State<PrivateChatView> {
                         children: [
                           Text(
                             'Replying to ${_replyTo!.mine ? "your message" : _name}',
-                            style: const TextStyle(color: AppColors.text, fontSize: 12.0, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: AppColors.text,
+                              fontSize: 12.0,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text(
-                            _replyTo!.text.isNotEmpty ? _replyTo!.text : 'Photo/Attachment',
-                            style: const TextStyle(color: AppColors.muted, fontSize: 11.0),
+                            _replyTo!.text.isNotEmpty
+                                ? _replyTo!.text
+                                : 'Photo/Attachment',
+                            style: const TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 11.0,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -502,12 +562,17 @@ class _PrivateChatViewState extends State<PrivateChatView> {
                   children: [
                     const Text(
                       'Your chat time is complete',
-                      style: TextStyle(color: AppColors.text, fontSize: 14.0, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppColors.text,
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 10.0),
                     AppButton(
                       title: 'View subscription plans',
-                      onPressed: () => Get.toNamed(AppRoutes.SUBSCRIPTION_PLANS),
+                      onPressed: () =>
+                          Get.toNamed(AppRoutes.SUBSCRIPTION_PLANS),
                     ),
                   ],
                 ),
@@ -515,31 +580,39 @@ class _PrivateChatViewState extends State<PrivateChatView> {
             else
               Container(
                 color: AppColors.surface,
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10.0,
+                  vertical: 8.0,
+                ),
                 child: Row(
                   children: [
                     AppIconButton(
                       icon: Icons.add,
                       onPressed: () {
-                        Get.snackbar('Attach media', 'Attachments are supported in private chats.');
+                        Get.snackbar(
+                          'Attach media',
+                          'Attachments are supported in private chats.',
+                        );
                       },
                     ),
                     Expanded(
                       child: TextField(
                         controller: _inputController,
-                        style: const TextStyle(color: AppColors.text, fontSize: 14.0),
+                        style: const TextStyle(
+                          color: AppColors.text,
+                          fontSize: 14.0,
+                        ),
                         decoration: const InputDecoration(
                           hintText: 'Write a message...',
                           hintStyle: TextStyle(color: AppColors.muted),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 10.0,
+                          ),
                         ),
                       ),
                     ),
-                    AppIconButton(
-                      icon: Icons.send,
-                      onPressed: _handleSend,
-                    ),
+                    AppIconButton(icon: Icons.send, onPressed: _handleSend),
                   ],
                 ),
               ),
@@ -551,7 +624,9 @@ class _PrivateChatViewState extends State<PrivateChatView> {
 
   Widget _buildMessageBubble(Message msg) {
     final bool isMine = msg.mine;
-    final alignment = isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final alignment = isMine
+        ? CrossAxisAlignment.end
+        : CrossAxisAlignment.start;
     final bubbleColor = isMine ? AppColors.primary : AppColors.surfaceAlt;
     final textColor = isMine ? Colors.white : AppColors.text;
 
@@ -564,7 +639,9 @@ class _PrivateChatViewState extends State<PrivateChatView> {
             onLongPress: () => _onMessageLongPress(msg),
             child: Container(
               padding: const EdgeInsets.all(12.0),
-              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.76),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.76,
+              ),
               decoration: BoxDecoration(
                 color: bubbleColor,
                 borderRadius: BorderRadius.only(
@@ -581,7 +658,11 @@ class _PrivateChatViewState extends State<PrivateChatView> {
                   if (msg.deleted == true)
                     Text(
                       'This message was deleted',
-                      style: TextStyle(color: isMine ? Colors.white70 : AppColors.muted, fontSize: 13.0, fontStyle: FontStyle.italic),
+                      style: TextStyle(
+                        color: isMine ? Colors.white70 : AppColors.muted,
+                        fontSize: 13.0,
+                        fontStyle: FontStyle.italic,
+                      ),
                     )
                   else ...[
                     // Reply header indicator
@@ -590,16 +671,22 @@ class _PrivateChatViewState extends State<PrivateChatView> {
                         margin: const EdgeInsets.only(bottom: 6.0),
                         padding: const EdgeInsets.only(left: 6.0),
                         decoration: const BoxDecoration(
-                          border: Border(left: BorderSide(color: Colors.white30, width: 2.0)),
+                          border: Border(
+                            left: BorderSide(color: Colors.white30, width: 2.0),
+                          ),
                         ),
                         child: const Text(
                           'Reply to a previous message',
-                          style: TextStyle(color: Colors.white60, fontSize: 10.0),
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: 10.0,
+                          ),
                         ),
                       ),
 
                     // Attachment photo
-                    if (msg.attachment != null && msg.attachment!.kind == 'image') ...[
+                    if (msg.attachment != null &&
+                        msg.attachment!.kind == 'image') ...[
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8.0),
                         child: Image.network(
@@ -607,7 +694,10 @@ class _PrivateChatViewState extends State<PrivateChatView> {
                           fit: BoxFit.cover,
                           height: 150.0,
                           width: double.infinity,
-                          errorBuilder: (c, e, s) => const Icon(Icons.broken_image, color: Colors.white70),
+                          errorBuilder: (c, e, s) => const Icon(
+                            Icons.broken_image,
+                            color: Colors.white70,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 6.0),
@@ -617,7 +707,11 @@ class _PrivateChatViewState extends State<PrivateChatView> {
                     if (msg.text.isNotEmpty)
                       Text(
                         msg.text,
-                        style: TextStyle(color: textColor, fontSize: 13.5, height: 1.4),
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 13.5,
+                          height: 1.4,
+                        ),
                       ),
                   ],
                 ],

@@ -1,11 +1,12 @@
-import 'dart:async';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/widgets/app_avatar.dart';
-import '../controllers/chat_controller.dart';
-import '../../profile/controllers/profile_controller.dart';
-import '../../../routes/app_routes.dart';
+import 'package:dating_app/core/constants/app_colors.dart';
+import 'package:dating_app/core/services/agora_call_service.dart';
+import 'package:dating_app/core/widgets/app_avatar.dart';
+import 'package:dating_app/features/chat/controllers/chat_controller.dart';
+import 'package:dating_app/features/profile/controllers/profile_controller.dart';
+import 'package:dating_app/routes/app_routes.dart';
 
 class VideoCallView extends StatefulWidget {
   const VideoCallView({super.key});
@@ -18,16 +19,11 @@ class _VideoCallViewState extends State<VideoCallView> {
   final ChatController _chatController = Get.find<ChatController>();
   final ProfileController _profileController = Get.find<ProfileController>();
 
+  late final AgoraCallService _agora;
+
   String _callId = '';
   String _name = '';
   String _personId = '';
-
-  bool _muted = false;
-  bool _speaker = true;
-  bool _videoEnabled = true;
-  bool _frontCamera = true;
-  int _seconds = 0;
-  Timer? _timer;
   bool _ended = false;
   int _reservedMinutes = 0;
 
@@ -39,46 +35,46 @@ class _VideoCallViewState extends State<VideoCallView> {
     _name = args?['name'] ?? 'User';
     _personId = args?['personId'] ?? '';
 
+    _agora = AgoraCallService();
+    _agora.addListener(_onAgoraStateChanged);
+    _agora.initializeForCall(_callId, isVideo: true);
     _loadCallConfig();
-    _startTimer();
+  }
+
+  void _onAgoraStateChanged() {
+    if (!mounted) return;
+    setState(() {});
+    if (_agora.status == AgoraCallStatus.ended && !_ended) {
+      _handleCallEnded();
+    }
   }
 
   void _loadCallConfig() async {
     try {
       final config = await _chatController.loadCallConfig();
-      setState(() {
-        _reservedMinutes = config['durationOptions']?[0] ?? 10;
-      });
-    } catch (_) {
-      setState(() {
-        _reservedMinutes = 10;
-      });
-    }
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
-        setState(() {
-          _seconds++;
-        });
+        setState(() => _reservedMinutes = config['durationOptions']?[0] ?? 10);
       }
-    });
+    } catch (_) {
+      if (mounted) setState(() => _reservedMinutes = 10);
+    }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    if (!_ended) {
-      _chatController.endCall(_callId);
-    }
+    _agora.removeListener(_onAgoraStateChanged);
+    _agora.dispose();
+    if (!_ended) _chatController.endCall(_callId);
     super.dispose();
   }
 
-  void _endCall() async {
-    if (_ended) return;
+  void _handleCallEnded() {
     _ended = true;
-    _timer?.cancel();
+    _endCall();
+  }
+
+  void _endCall() async {
+    _ended = true;
     try {
       final res = await _chatController.endCall(_callId);
       final num charged = res['chargedCoins'] ?? 0;
@@ -103,7 +99,6 @@ class _VideoCallViewState extends State<VideoCallView> {
     try {
       final config = await _chatController.loadCallConfig();
       final List durationOptions = config['durationOptions'] ?? [5, 10, 15];
-
       Get.defaultDialog(
         title: 'Extend session',
         middleText: 'Additional coins are locked immediately.',
@@ -123,7 +118,10 @@ class _VideoCallViewState extends State<VideoCallView> {
                 Get.snackbar('Could not extend', e.toString());
               }
             },
-            child: Text('+$minutes min', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            child: Text(
+              '+$minutes min',
+              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+            ),
           );
         }).toList(),
       );
@@ -132,7 +130,7 @@ class _VideoCallViewState extends State<VideoCallView> {
     }
   }
 
-  void _reportCall() async {
+  void _reportCall() {
     Get.defaultDialog(
       title: 'Report call',
       middleText: 'Submit report for inappropriate behavior?',
@@ -158,59 +156,99 @@ class _VideoCallViewState extends State<VideoCallView> {
     return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
+  String get _statusText {
+    if (_agora.error != null) return _agora.error!;
+    switch (_agora.status) {
+      case AgoraCallStatus.connected:
+        return _formatDuration(_agora.seconds);
+      case AgoraCallStatus.reconnecting:
+        return 'Reconnecting securely…';
+      case AgoraCallStatus.ended:
+        return 'Call ended';
+      default:
+        return 'Connecting securely…';
+    }
+  }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
+    final engine = _agora.engine;
+
     return Scaffold(
       backgroundColor: const Color(0xFF101326),
       body: Stack(
         children: [
-          // Remote Participant Video View Mock Canvas
+          // ── Remote Video (full-screen) ─────────────────────────────────────
           Positioned.fill(
-            child: Container(
-              color: const Color(0xFF1B203E),
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AppAvatar(name: _name, size: 100.0),
-                  const SizedBox(height: 14.0),
-                  Text(
-                    _name,
-                    style: const TextStyle(color: Colors.white, fontSize: 22.0, fontWeight: FontWeight.bold),
+            child: engine != null && _agora.remoteUid != null
+                ? AgoraVideoView(
+                    controller: VideoViewController.remote(
+                      rtcEngine: engine,
+                      canvas: VideoCanvas(uid: _agora.remoteUid!),
+                      connection: RtcConnection(channelId: _agora.channelId),
+                    ),
+                  )
+                : Container(
+                    color: const Color(0xFF1B203E),
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AppAvatar(name: _name, size: 100.0),
+                        const SizedBox(height: 14.0),
+                        Text(
+                          _name,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 22.0, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4.0),
+                        Text(
+                          _statusText,
+                          style: const TextStyle(color: Colors.white70, fontSize: 13.0),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 4.0),
-                  const Text('Video stream connected…', style: TextStyle(color: Colors.white70, fontSize: 13.0)),
-                ],
-              ),
-            ),
           ),
 
-          // Local Video Camera Preview Overlay (top right)
-          if (_videoEnabled)
+          // ── Local Camera Preview (top-right pip) ────────────────────────────
+          if (_agora.cameraEnabled && engine != null)
             Positioned(
-              top: 48.0,
+              top: 52.0,
               right: 20.0,
-              child: Container(
-                width: 110.0,
-                height: 160.0,
-                decoration: BoxDecoration(
-                  color: Colors.black45,
-                  borderRadius: BorderRadius.circular(16.0),
-                  border: Border.all(color: Colors.white24, width: 1.5),
-                ),
-                alignment: Alignment.center,
-                child: const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.videocam, color: Colors.white70, size: 28.0),
-                    SizedBox(height: 4.0),
-                    Text('You (Self)', style: TextStyle(color: Colors.white70, fontSize: 10.0)),
-                  ],
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16.0),
+                child: SizedBox(
+                  width: 110.0,
+                  height: 160.0,
+                  child: AgoraVideoView(
+                    controller: VideoViewController(
+                      rtcEngine: engine,
+                      canvas: const VideoCanvas(uid: 0),
+                    ),
+                  ),
                 ),
               ),
             ),
 
-          // Safe Area controls and text details overlay
+          // ── Remaining minutes badge ──────────────────────────────────────────
+          if (_reservedMinutes > 0)
+            Positioned(
+              top: 130.0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  '${(_reservedMinutes - (_agora.seconds ~/ 60)).clamp(0, _reservedMinutes)} min remaining',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+
+          // ── Overlay Controls ─────────────────────────────────────────────────
           Positioned.fill(
             child: SafeArea(
               child: Padding(
@@ -218,9 +256,9 @@ class _VideoCallViewState extends State<VideoCallView> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Top Details Info
+                    // Top info bar
                     Container(
-                      padding: const EdgeInsets.all(12.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
                       decoration: BoxDecoration(
                         color: Colors.black38,
                         borderRadius: BorderRadius.circular(14.0),
@@ -230,17 +268,26 @@ class _VideoCallViewState extends State<VideoCallView> {
                         children: [
                           const Text(
                             'VIDEO CALL',
-                            style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                            ),
                           ),
                           Text(
-                            _formatDuration(_seconds),
-                            style: const TextStyle(color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.bold),
+                            _statusText,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
                     ),
 
-                    // Controls Box at bottom
+                    // Bottom controls
                     Column(
                       children: [
                         Container(
@@ -253,41 +300,29 @@ class _VideoCallViewState extends State<VideoCallView> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               _buildControl(
-                                _muted ? Icons.mic_off : Icons.mic,
-                                _muted,
-                                () => setState(() => _muted = !_muted),
+                                _agora.muted ? Icons.mic_off : Icons.mic,
+                                _agora.muted,
+                                _agora.toggleMute,
                               ),
                               _buildControl(
-                                _speaker ? Icons.volume_up : Icons.volume_down,
-                                _speaker,
-                                () => setState(() => _speaker = !_speaker),
+                                _agora.speakerOn ? Icons.volume_up : Icons.volume_down,
+                                _agora.speakerOn,
+                                _agora.toggleSpeaker,
                               ),
                               _buildControl(
-                                _videoEnabled ? Icons.videocam : Icons.videocam_off,
-                                !_videoEnabled,
-                                () => setState(() => _videoEnabled = !_videoEnabled),
+                                _agora.cameraEnabled ? Icons.videocam : Icons.videocam_off,
+                                !_agora.cameraEnabled,
+                                _agora.toggleCamera,
                               ),
-                              _buildControl(
-                                Icons.flip_camera_ios,
-                                false,
-                                () => setState(() => _frontCamera = !_frontCamera),
-                              ),
-                              _buildControl(
-                                Icons.timer_outlined,
-                                false,
-                                _extendSession,
-                              ),
-                              _buildControl(
-                                Icons.flag_outlined,
-                                false,
-                                _reportCall,
-                              ),
+                              _buildControl(Icons.flip_camera_ios, false, _agora.switchCamera),
+                              _buildControl(Icons.timer_outlined, false, _extendSession),
+                              _buildControl(Icons.flag_outlined, false, _reportCall),
                             ],
                           ),
                         ),
                         const SizedBox(height: 20.0),
 
-                        // End call button
+                        // End call
                         GestureDetector(
                           onTap: _endCall,
                           child: Container(

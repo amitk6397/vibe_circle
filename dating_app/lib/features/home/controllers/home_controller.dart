@@ -16,6 +16,7 @@ class HomeController extends GetxController {
   final RxBool storyRailOpen = false.obs;
   final RxString storyRailSide = 'left'.obs; // 'left' or 'right'
   final RxDouble storyHandleY = 220.0.obs;
+  final RxDouble storyHandleX = 0.0.obs;
 
   // Active story viewer states
   final RxnString activeStoryOwner = RxnString();

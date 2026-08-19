@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../core/constants/app_colors.dart';
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_screen.dart';
@@ -22,7 +22,8 @@ class ConnectionsView extends StatefulWidget {
 class _ConnectionsViewState extends State<ConnectionsView> {
   final ProfileController _profileController = Get.find<ProfileController>();
   final AuthController _authController = Get.find<AuthController>();
-  final DiscoveryController _discoveryController = Get.find<DiscoveryController>();
+  final DiscoveryController _discoveryController =
+      Get.find<DiscoveryController>();
 
   String _activeTab = 'Followers'; // 'Followers' | 'Following'
 
@@ -72,31 +73,37 @@ class _ConnectionsViewState extends State<ConnectionsView> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final List<Person> connectedPeople = _profileController.connections.where((item) {
-                if (_activeTab == 'Followers') {
-                  return item['receiver_id'].toString() == myId;
-                } else {
-                  return item['requester_id'].toString() == myId;
-                }
-              }).map((item) {
-                final otherId = item['requester_id'].toString() == myId
-                    ? item['receiver_id'].toString()
-                    : item['requester_id'].toString();
+              final List<Person> connectedPeople = _profileController
+                  .connections
+                  .where((item) {
+                    if (_activeTab == 'Followers') {
+                      return item['receiver_id'].toString() == myId;
+                    } else {
+                      return item['requester_id'].toString() == myId;
+                    }
+                  })
+                  .map((item) {
+                    final otherId = item['requester_id'].toString() == myId
+                        ? item['receiver_id'].toString()
+                        : item['requester_id'].toString();
 
-                final p = _discoveryController.people.firstWhereOrNull((person) => person.id == otherId);
-                if (p != null) return p;
+                    final p = _discoveryController.people.firstWhereOrNull(
+                      (person) => person.id == otherId,
+                    );
+                    if (p != null) return p;
 
-                return Person(
-                  id: otherId,
-                  name: item['name'] ?? 'User',
-                  username: 'user_$otherId',
-                  age: 18,
-                  interests: const [],
-                  languages: const [],
-                  online: false,
-                  avatarColor: '#5B5CE2',
-                );
-              }).toList();
+                    return Person(
+                      id: otherId,
+                      name: item['name'] ?? 'User',
+                      username: 'user_$otherId',
+                      age: 18,
+                      interests: const [],
+                      languages: const [],
+                      online: false,
+                      avatarColor: '#5B5CE2',
+                    );
+                  })
+                  .toList();
 
               if (_profileController.error.isNotEmpty) {
                 return Center(
@@ -118,7 +125,9 @@ class _ConnectionsViewState extends State<ConnectionsView> {
                     )
                   : AppEmptyState(
                       icon: Icons.people_outline,
-                      title: _activeTab == 'Followers' ? 'No followers yet' : 'Not following anyone',
+                      title: _activeTab == 'Followers'
+                          ? 'No followers yet'
+                          : 'Not following anyone',
                       text: _activeTab == 'Followers'
                           ? 'Conversations you accept will connect you.'
                           : 'Discover members in the directory to follow.',
@@ -131,4 +140,3 @@ class _ConnectionsViewState extends State<ConnectionsView> {
     );
   }
 }
-

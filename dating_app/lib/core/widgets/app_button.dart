@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_text_styles.dart';
@@ -41,7 +42,9 @@ class AppButton extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 2.0,
               valueColor: AlwaysStoppedAnimation<Color>(
-                tone == AppButtonTone.primary ? Colors.white : AppColors.primary,
+                tone == AppButtonTone.primary
+                    ? Colors.white
+                    : AppColors.primary,
               ),
             ),
           ),
@@ -52,7 +55,9 @@ class AppButton extends StatelessWidget {
             size: 18.0,
             color: tone == AppButtonTone.primary
                 ? Colors.white
-                : (tone == AppButtonTone.danger ? AppColors.danger : AppColors.primary),
+                : (tone == AppButtonTone.danger
+                      ? AppColors.danger
+                      : AppColors.primary),
           ),
           const SizedBox(width: 8.0),
         ],
@@ -86,10 +91,12 @@ class AppButton extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: disabled || loading ? null : () {
-              HapticFeedback.lightImpact();
-              onPressed();
-            },
+            onTap: disabled || loading
+                ? null
+                : () {
+                    HapticFeedback.lightImpact();
+                    onPressed();
+                  },
             borderRadius: BorderRadius.circular(radius),
             child: Center(child: child),
           ),
@@ -120,15 +127,19 @@ class AppButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: disabled ? bg.withValues(alpha: 0.2) : bg,
           borderRadius: BorderRadius.circular(radius),
-          border: border != BorderSide.none ? Border.fromBorderSide(border) : null,
+          border: border != BorderSide.none
+              ? Border.fromBorderSide(border)
+              : null,
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: disabled || loading ? null : () {
-              HapticFeedback.lightImpact();
-              onPressed();
-            },
+            onTap: disabled || loading
+                ? null
+                : () {
+                    HapticFeedback.lightImpact();
+                    onPressed();
+                  },
             borderRadius: BorderRadius.circular(radius),
             child: Center(child: child),
           ),
@@ -136,9 +147,6 @@ class AppButton extends StatelessWidget {
       );
     }
 
-    return Opacity(
-      opacity: disabled ? 0.45 : 1.0,
-      child: buttonWidget,
-    );
+    return Opacity(opacity: disabled ? 0.45 : 1.0, child: buttonWidget);
   }
 }

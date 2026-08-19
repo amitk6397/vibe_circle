@@ -1,9 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_screen.dart';
@@ -51,7 +52,9 @@ class _DailyRewardsViewState extends State<DailyRewardsView> {
           'streakDay': 3,
           'alreadyClaimedToday': false,
           'schedule': [5, 10, 15, 20, 30, 40, 50],
-          'nextClaimAt': DateTime.now().add(const Duration(hours: 12)).toIso8601String(),
+          'nextClaimAt': DateTime.now()
+              .add(const Duration(hours: 12))
+              .toIso8601String(),
         };
       });
       _startCountdown();
@@ -95,7 +98,8 @@ class _DailyRewardsViewState extends State<DailyRewardsView> {
 
       Get.defaultDialog(
         title: '🎉 Reward Claimed!',
-        middleText: 'You earned ${data['coins_awarded']} coins!\nCome back tomorrow for more rewards.',
+        middleText:
+            'You earned ${data['coins_awarded']} coins!\nCome back tomorrow for more rewards.',
         textConfirm: 'Awesome',
         confirmTextColor: Colors.white,
         buttonColor: AppColors.primary,
@@ -140,15 +144,14 @@ class _DailyRewardsViewState extends State<DailyRewardsView> {
 
     final int streakDay = _status?['streakDay'] ?? 0;
     final bool alreadyClaimed = _status?['alreadyClaimedToday'] ?? false;
-    final List<dynamic> schedule = _status?['schedule'] ?? [5, 10, 15, 20, 30, 40, 50];
+    final List<dynamic> schedule =
+        _status?['schedule'] ?? [5, 10, 15, 20, 30, 40, 50];
     final num todayReward = schedule[streakDay % schedule.length];
-    final num nextReward = schedule[(streakDay + (alreadyClaimed ? 1 : 0)) % schedule.length];
+    final num nextReward =
+        schedule[(streakDay + (alreadyClaimed ? 1 : 0)) % schedule.length];
 
     return AppScreen(
-      header: AppHeader(
-        title: 'Daily Login Rewards',
-        onBack: () => Get.back(),
-      ),
+      header: AppHeader(title: 'Daily Login Rewards', onBack: () => Get.back()),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
@@ -187,7 +190,10 @@ class _DailyRewardsViewState extends State<DailyRewardsView> {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              const Text('🔥 ', style: TextStyle(fontSize: 26.0)),
+                              const Text(
+                                '🔥 ',
+                                style: TextStyle(fontSize: 26.0),
+                              ),
                               Text(
                                 '$streakDay',
                                 style: const TextStyle(
@@ -239,27 +245,41 @@ class _DailyRewardsViewState extends State<DailyRewardsView> {
                     alreadyClaimed
                         ? "Today's reward has been claimed! 🎉"
                         : "Claim today's reward to keep your streak alive!",
-                    style: const TextStyle(color: Colors.white70, fontSize: 13.0),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13.0,
+                    ),
                   ),
                   const SizedBox(height: 16.0),
-                  
+
                   // Claim Button
                   MaterialButton(
-                    onPressed: alreadyClaimed || _claiming ? null : _claimReward,
+                    onPressed: alreadyClaimed || _claiming
+                        ? null
+                        : _claimReward,
                     color: Colors.white,
                     disabledColor: Colors.white24,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 14.0),
                     child: _claiming
                         ? const SizedBox(
                             height: 18.0,
                             width: 18.0,
-                            child: CircularProgressIndicator(color: Color(0xFF7C3AED), strokeWidth: 2.0),
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF7C3AED),
+                              strokeWidth: 2.0,
+                            ),
                           )
                         : Text(
-                            alreadyClaimed ? 'Reward Claimed ✓' : 'Claim $todayReward Coins Now!',
+                            alreadyClaimed
+                                ? 'Reward Claimed ✓'
+                                : 'Claim $todayReward Coins Now!',
                             style: TextStyle(
-                              color: alreadyClaimed ? Colors.white70 : const Color(0xFF7C3AED),
+                              color: alreadyClaimed
+                                  ? Colors.white70
+                                  : const Color(0xFF7C3AED),
                               fontWeight: FontWeight.bold,
                               fontSize: 14.0,
                             ),
@@ -272,11 +292,18 @@ class _DailyRewardsViewState extends State<DailyRewardsView> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.access_time, color: Colors.white70, size: 14.0),
+                        const Icon(
+                          Icons.access_time,
+                          color: Colors.white70,
+                          size: 14.0,
+                        ),
                         const SizedBox(width: 6.0),
                         Text(
                           'Next reward available in $_countdown',
-                          style: const TextStyle(color: Colors.white70, fontSize: 11.5),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11.5,
+                          ),
                         ),
                       ],
                     ),
@@ -306,7 +333,9 @@ class _DailyRewardsViewState extends State<DailyRewardsView> {
               itemCount: schedule.length,
               itemBuilder: (context, index) {
                 final int dayNum = index + 1;
-                final bool isClaimed = alreadyClaimed ? dayNum <= streakDay : dayNum < streakDay;
+                final bool isClaimed = alreadyClaimed
+                    ? dayNum <= streakDay
+                    : dayNum < streakDay;
                 final bool isToday = alreadyClaimed
                     ? dayNum == streakDay
                     : dayNum == streakDay + 1;
@@ -323,7 +352,9 @@ class _DailyRewardsViewState extends State<DailyRewardsView> {
                     color: cardBg,
                     borderRadius: BorderRadius.circular(12.0),
                     border: Border.all(
-                      color: isToday && !alreadyClaimed ? AppColors.primary : Colors.transparent,
+                      color: isToday && !alreadyClaimed
+                          ? AppColors.primary
+                          : Colors.transparent,
                       width: 1.0,
                     ),
                   ),
@@ -332,9 +363,17 @@ class _DailyRewardsViewState extends State<DailyRewardsView> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (isClaimed)
-                        const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 22.0)
+                        const Icon(
+                          Icons.check_circle,
+                          color: Color(0xFF10B981),
+                          size: 22.0,
+                        )
                       else if (isToday && !alreadyClaimed)
-                        const Icon(Icons.card_giftcard, color: AppColors.primary, size: 22.0)
+                        const Icon(
+                          Icons.card_giftcard,
+                          color: AppColors.primary,
+                          size: 22.0,
+                        )
                       else
                         Text(
                           _dayEmojis[index % _dayEmojis.length],
@@ -353,7 +392,9 @@ class _DailyRewardsViewState extends State<DailyRewardsView> {
                       Text(
                         '🪙 ${schedule[index]}',
                         style: TextStyle(
-                          color: isToday && !alreadyClaimed ? AppColors.primary : AppColors.muted,
+                          color: isToday && !alreadyClaimed
+                              ? AppColors.primary
+                              : AppColors.muted,
                           fontSize: 10.0,
                           fontWeight: FontWeight.w600,
                         ),
@@ -372,9 +413,18 @@ class _DailyRewardsViewState extends State<DailyRewardsView> {
                 children: [
                   const Text('How it works', style: AppTextStyles.h2),
                   const SizedBox(height: 8.0),
-                  _buildTipRow(Icons.flash_on, 'Login every day to maintain your streak'),
-                  _buildTipRow(Icons.emoji_events_outlined, 'Day 7 gives maximum ${schedule.last} coins!'),
-                  _buildTipRow(Icons.warning_amber_rounded, 'Missing a day resets your streak to Day 1'),
+                  _buildTipRow(
+                    Icons.flash_on,
+                    'Login every day to maintain your streak',
+                  ),
+                  _buildTipRow(
+                    Icons.emoji_events_outlined,
+                    'Day 7 gives maximum ${schedule.last} coins!',
+                  ),
+                  _buildTipRow(
+                    Icons.warning_amber_rounded,
+                    'Missing a day resets your streak to Day 1',
+                  ),
                 ],
               ),
             ),
