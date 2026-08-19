@@ -918,43 +918,29 @@ def update_settings(payload: PlatformSettingsUpdate, db: DbSession, user: Curren
         "public_post_price_coins": "PUBLIC_POST_PRICE_COINS",
         "private_post_price_coins": "PRIVATE_POST_PRICE_COINS",
     }
-    # Apply changes to the in-memory settings object
+    # Apply changes to the in-memory settings object and persist to database
+    from app.modules.app_content.models import SystemSetting
+    from sqlalchemy import select
+
     for key, value in changes.items():
         if hasattr(settings, key):
             object.__setattr__(settings, key, value)
-    # Persist to .env file
-    from pathlib import Path
-    from app.core.config import BASE_DIR
-    env_path = BASE_DIR / ".env"
-    lines: list[str] = []
-    if env_path.exists():
-        lines = env_path.read_text(encoding="utf-8").splitlines()
-    updated_keys: set[str] = set()
-    new_lines: list[str] = []
-    for line in lines:
-        matched = False
-        for field_name, env_key in env_map.items():
-            if line.startswith(f"{env_key}=") and field_name in changes:
-                val = changes[field_name]
-                if isinstance(val, list):
-                    val = ",".join(str(x) for x in val)
-                elif isinstance(val, bool):
-                    val = str(val).lower()
-                new_lines.append(f"{env_key}={val}")
-                updated_keys.add(field_name)
-                matched = True
-                break
-        if not matched:
-            new_lines.append(line)
-    for field_name, value in changes.items():
-        if field_name not in updated_keys and field_name in env_map:
-            val = value
-            if isinstance(val, list):
-                val = ",".join(str(x) for x in val)
-            elif isinstance(val, bool):
-                val = str(val).lower()
-            new_lines.append(f"{env_map[field_name]}={val}")
-    env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+            
+            # Stringify value to save in DB
+            if isinstance(value, list):
+                db_val = ",".join(str(x) for x in value)
+            elif isinstance(value, bool):
+                db_val = str(value).lower()
+            else:
+                db_val = str(value)
+                
+            # Upsert in database
+            db_setting = db.scalar(select(SystemSetting).where(SystemSetting.key == key))
+            if db_setting:
+                db_setting.value = db_val
+            else:
+                db.add(SystemSetting(key=key, value=db_val))
+
     audit(db, user.id, "admin.settings.updated", "settings", "global", changes)
     db.commit()
     return get_settings(db, user)

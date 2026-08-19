@@ -14,3 +14,11 @@ class SupportArticle(Base, IdMixin, TimestampMixin):
     body: Mapped[str] = mapped_column(Text)
     position: Mapped[int] = mapped_column(Integer, index=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+
+
+class SystemSetting(Base, IdMixin, TimestampMixin):
+    __tablename__ = "system_settings"
+
+    key: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    value: Mapped[str] = mapped_column(Text)
+

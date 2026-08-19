@@ -37,6 +37,8 @@ async def lifespan(_: FastAPI):
 
     with SessionLocal() as db:
         seed_app_content(db)
+        from app.core.config import load_database_settings
+        load_database_settings(db)
     yield
 
 

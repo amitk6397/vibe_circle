@@ -123,3 +123,38 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+
+def load_database_settings(db) -> None:
+    """Load settings from system_settings table and populate the in-memory settings instance."""
+    try:
+        from app.modules.app_content.models import SystemSetting
+        from sqlalchemy import select
+        
+        db_settings = db.scalars(select(SystemSetting)).all()
+        for s in db_settings:
+            if hasattr(settings, s.key):
+                current_val = getattr(settings, s.key)
+                target_type = type(current_val)
+                db_val = s.value
+                
+                # Parse based on type
+                if target_type is bool:
+                    parsed = db_val.lower() in ("true", "1", "yes")
+                elif target_type is int:
+                    parsed = int(db_val)
+                elif target_type is float:
+                    parsed = float(db_val)
+                elif isinstance(current_val, list):
+                    # Check list element type
+                    if current_val and isinstance(current_val[0], int):
+                        parsed = [int(x.strip()) for x in db_val.split(",") if x.strip()]
+                    else:
+                        parsed = [x.strip() for x in db_val.split(",") if x.strip()]
+                else:
+                    parsed = str(db_val)
+                
+                object.__setattr__(settings, s.key, parsed)
+    except Exception as e:
+        print(f"Error loading settings from database: {e}")
+
