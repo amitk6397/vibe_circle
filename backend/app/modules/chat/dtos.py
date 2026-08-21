@@ -20,6 +20,10 @@ class ReactionCreate(BaseModel):
     emoji: str = Field(min_length=1, max_length=12)
 
 
+class MessageEdit(BaseModel):
+    text: str = Field(min_length=1, max_length=5000)
+
+
 class ConversationSettings(BaseModel):
     muted: bool | None = None
     archived: bool | None = None

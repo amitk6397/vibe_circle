@@ -6,7 +6,7 @@ from app.common.dependencies import CurrentUser, DbSession
 from app.common.errors import AppError
 from app.common.schemas import ApiMessage
 from app.modules.chat import service
-from app.modules.chat.dtos import ConversationCreate, ConversationSettings, MessageCreate, MessageRequestAction, MessageRequestCreate, ReactionCreate
+from app.modules.chat.dtos import ConversationCreate, ConversationSettings, MessageCreate, MessageEdit, MessageRequestAction, MessageRequestCreate, ReactionCreate
 from app.modules.chat.models import Conversation, Message, MessageRequest
 from app.modules.moderation.models import Block
 from app.modules.notifications.service import create_notification
@@ -311,6 +311,21 @@ def delete_message(message_id: str, db: DbSession, user: CurrentUser):
     item.is_deleted = True
     db.commit()
     return ApiMessage(message="Message deleted.")
+
+
+def edit_message(message_id: str, payload: MessageEdit, db: DbSession, user: CurrentUser):
+    item = db.get(Message, message_id)
+    if not item or item.sender_id != user.id:
+        raise AppError(404, "message_not_found", "Message not found.")
+    if item.is_deleted:
+        raise AppError(400, "cannot_edit_deleted", "Cannot edit a deleted message.")
+    new_text = payload.text.strip()
+    if not new_text:
+        raise AppError(400, "empty_text", "Message text cannot be empty.")
+    item.text = new_text
+    db.commit()
+    db.refresh(item)
+    return item
 
 
 def settings(conversation_id: str, payload: ConversationSettings, db: DbSession, user: CurrentUser):

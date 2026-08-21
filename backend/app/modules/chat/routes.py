@@ -27,6 +27,7 @@ router.add_api_route("/conversations/{conversation_id}/read", controller.read_me
 router.add_api_route("/conversations/{conversation_id}/settings", controller.settings, methods=["PATCH"])
 router.add_api_route("/conversations/{conversation_id}/clear", controller.clear, methods=["DELETE"])
 router.add_api_route("/messages/{message_id}/reactions", controller.react, methods=["POST"])
+router.add_api_route("/messages/{message_id}", controller.edit_message, methods=["PATCH"])
 router.add_api_route("/messages/{message_id}", controller.delete_message, methods=["DELETE"])
 
 
@@ -132,6 +133,51 @@ async def websocket_chat(socket: WebSocket, conversation_id: str, token: str):
                     await manager.broadcast(channel, {"event": "message", "message": response, "client_id": payload.get("client_id")})
                 except (ValidationError, Exception) as exc:
                     await socket.send_json({"event": "error", "client_id": payload.get("client_id"), "message": str(exc)})
+            elif event == "react":
+                try:
+                    message_id = payload.get("message_id")
+                    emoji = payload.get("emoji")
+                    if message_id and emoji:
+                        with SessionLocal() as db:
+                            item = db.get(Message, message_id)
+                            if item and item.conversation_id == conversation_id:
+                                reactions = dict(item.reactions or {})
+                                if reactions.get(user_id) == emoji:
+                                    reactions.pop(user_id, None)
+                                else:
+                                    reactions[user_id] = emoji
+                                item.reactions = reactions
+                                db.commit()
+                                await manager.broadcast(channel, {"event": "react", "message_id": message_id, "reactions": reactions, "user_id": user_id})
+                except Exception as exc:
+                    await socket.send_json({"event": "error", "message": str(exc)})
+            elif event == "delete":
+                try:
+                    message_id = payload.get("message_id")
+                    if message_id:
+                        with SessionLocal() as db:
+                            item = db.get(Message, message_id)
+                            if item and item.conversation_id == conversation_id and item.sender_id == user_id:
+                                item.text = ""
+                                item.media_url = None
+                                item.is_deleted = True
+                                db.commit()
+                                await manager.broadcast(channel, {"event": "delete", "message_id": message_id, "user_id": user_id})
+                except Exception as exc:
+                    await socket.send_json({"event": "error", "message": str(exc)})
+            elif event == "edit":
+                try:
+                    message_id = payload.get("message_id")
+                    new_text = (payload.get("text") or "").strip()
+                    if message_id and new_text:
+                        with SessionLocal() as db:
+                            item = db.get(Message, message_id)
+                            if item and item.conversation_id == conversation_id and item.sender_id == user_id and not item.is_deleted:
+                                item.text = new_text
+                                db.commit()
+                                await manager.broadcast(channel, {"event": "edit", "message_id": message_id, "text": new_text, "user_id": user_id})
+                except Exception as exc:
+                    await socket.send_json({"event": "error", "message": str(exc)})
     except WebSocketDisconnect:
         manager.disconnect(channel, socket)
         if not manager.has_user(user_id):
