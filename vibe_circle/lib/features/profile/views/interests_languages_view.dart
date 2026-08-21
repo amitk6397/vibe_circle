@@ -3,6 +3,9 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 
+import '../../auth/controllers/auth_controller.dart';
+import '../repositories/user_repository.dart';
+
 class InterestsLanguagesView extends StatefulWidget {
   const InterestsLanguagesView({super.key});
 
@@ -22,6 +25,9 @@ class _InterestsLanguagesViewState extends State<InterestsLanguagesView> {
     'Italian', 'Japanese', 'Korean', 'Arabic', 'Russian', 'Chinese',
   ];
 
+  final AuthController _authController = Get.find<AuthController>();
+  final UserRepository _userRepo = UserRepository();
+
   List<String> _selectedInterests = [];
   List<String> _selectedLanguages = [];
   bool _saving = false;
@@ -29,11 +35,10 @@ class _InterestsLanguagesViewState extends State<InterestsLanguagesView> {
   @override
   void initState() {
     super.initState();
+    final profile = _authController.profile.value;
     final args = Get.arguments as Map<String, dynamic>?;
-    if (args != null) {
-      _selectedInterests = List<String>.from(args['interests'] ?? []);
-      _selectedLanguages = List<String>.from(args['languages'] ?? []);
-    }
+    _selectedInterests = List<String>.from(args?['interests'] ?? profile?.interests ?? []);
+    _selectedLanguages = List<String>.from(args?['languages'] ?? profile?.languages ?? []);
   }
 
   void _toggle(List<String> list, String value) {
@@ -48,12 +53,27 @@ class _InterestsLanguagesViewState extends State<InterestsLanguagesView> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    await Future.delayed(const Duration(milliseconds: 500));
-    setState(() => _saving = false);
-    Get.back(result: {
-      'interests': _selectedInterests,
-      'languages': _selectedLanguages,
-    });
+    try {
+      final updatedUser = await _userRepo.updateProfile({
+        'interests': _selectedInterests,
+        'languages': _selectedLanguages,
+      });
+      _authController.updateProfile(updatedUser);
+      Get.back(result: {
+        'interests': _selectedInterests,
+        'languages': _selectedLanguages,
+      });
+      Get.snackbar(
+        'Preferences saved 🎉',
+        'Your interests & languages have been updated.',
+        backgroundColor: AppColors.primary,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar('Could not save preferences', e.toString());
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override

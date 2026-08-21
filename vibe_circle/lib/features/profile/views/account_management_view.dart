@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../routes/app_routes.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../controllers/profile_controller.dart';
 
 class AccountManagementView extends GetView<ProfileController> {
@@ -38,7 +40,6 @@ class AccountManagementView extends GetView<ProfileController> {
               onPress: () async {
                 await controller.exportAccountData();
                 _showInfoDialog(
-                  context,
                   'Data export ready',
                   'Your account export was generated securely. Sharing/download UI can now use this response.',
                 );
@@ -50,7 +51,6 @@ class AccountManagementView extends GetView<ProfileController> {
               onPress: () async {
                 await controller.logoutAllDevices();
                 _showInfoDialog(
-                  context,
                   'Sessions revoked',
                   'All sessions have been signed out.',
                 );
@@ -60,7 +60,10 @@ class AccountManagementView extends GetView<ProfileController> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: () => controller.deleteAccountPermanently(), // Standard log out action
+                onPressed: () async {
+                  await Get.find<AuthController>().logout();
+                  Get.offAllNamed(AppRoutes.LOGIN);
+                },
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: AppColors.border),
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -73,7 +76,7 @@ class AccountManagementView extends GetView<ProfileController> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _showDeleteDialog(context),
+                onPressed: _showDeleteDialog,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.danger,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -88,47 +91,29 @@ class AccountManagementView extends GetView<ProfileController> {
     );
   }
 
-  void _showInfoDialog(BuildContext context, String title, String message) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(title, style: AppTextStyles.title),
-        content: Text(message, style: AppTextStyles.body),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK', style: TextStyle(color: AppColors.primary)),
-          ),
-        ],
-      ),
+  void _showInfoDialog(String title, String message) {
+    Get.defaultDialog(
+      title: title,
+      middleText: message,
+      textConfirm: 'OK',
+      confirmTextColor: Colors.white,
+      buttonColor: AppColors.primary,
+      onConfirm: () => Get.back(),
     );
   }
 
-  void _showDeleteDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Delete account?', style: AppTextStyles.title),
-        content: const Text(
-          'This permanently removes your profile and starts the required retention/deletion process.',
-          style: AppTextStyles.body,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.muted)),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              await controller.deleteAccountPermanently();
-            },
-            child: const Text('Delete', style: TextStyle(color: AppColors.danger)),
-          ),
-        ],
-      ),
+  void _showDeleteDialog() {
+    Get.defaultDialog(
+      title: 'Delete account?',
+      middleText: 'This permanently removes your profile and starts the required retention/deletion process.',
+      textConfirm: 'Delete',
+      textCancel: 'Cancel',
+      confirmTextColor: Colors.white,
+      buttonColor: AppColors.danger,
+      onConfirm: () async {
+        Get.back();
+        await controller.deleteAccountPermanently();
+      },
     );
   }
 }

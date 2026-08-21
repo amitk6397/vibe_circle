@@ -4,7 +4,6 @@ import '../models/community.dart';
 import '../models/comment.dart';
 import '../models/community_message.dart';
 import '../repositories/community_repository.dart';
-import '../../../core/network/network_api_service.dart';
 
 class CommunityController extends GetxController {
   final CommunityRepository _communityRepo = CommunityRepository();
@@ -88,6 +87,11 @@ class CommunityController extends GetxController {
         savedPosts.remove(postId);
       } else {
         savedPosts.add(postId);
+      }
+      final index = posts.indexWhere((p) => p.id == postId);
+      if (index != -1) {
+        final p = posts[index];
+        posts[index] = p.copyWith(saved: !p.saved);
       }
     } catch (e) {
       apiError.value = e.toString();
@@ -176,12 +180,12 @@ class CommunityController extends GetxController {
     }
   }
 
-  Future<void> sendGiftToPost(String postId, Map<String, dynamic> gift) async {
+  Future<void> sendGiftToPost(String postId, Map<String, dynamic> gift, String recipientId) async {
     try {
+      final giftId = gift['id']?.toString() ?? gift['gift_id']?.toString() ?? 'gift_heart';
       await _communityRepo.sendGift({
-        'gift_name': gift['name'],
-        'gift_emoji': gift['emoji'],
-        'coins': gift['coins'],
+        'gift_id': giftId,
+        'recipient_id': recipientId,
         'target_type': 'post',
         'target_id': postId,
       });
@@ -189,7 +193,12 @@ class CommunityController extends GetxController {
       if (index != -1) {
         final p = posts[index];
         final updatedGifts = List<dynamic>.from(p.gifts)..add(gift);
-        posts[index] = p.copyWith(gifts: updatedGifts);
+        final coins = (gift['coin_price'] ?? gift['coins'] ?? 0) as num;
+        posts[index] = p.copyWith(
+          gifts: updatedGifts,
+          tipTotal: p.tipTotal + coins.toDouble(),
+          tipCount: p.tipCount + 1,
+        );
       }
     } catch (e) {
       apiError.value = e.toString();
@@ -251,6 +260,19 @@ class CommunityController extends GetxController {
     }
   }
 
+  Future<void> updatePost(String postId, String body) async {
+    try {
+      final updated = await _communityRepo.updatePost(postId, body);
+      final index = posts.indexWhere((p) => p.id == postId);
+      if (index != -1) {
+        posts[index] = posts[index].copyWith(body: updated.body, content: updated.body);
+      }
+    } catch (e) {
+      apiError.value = e.toString();
+      rethrow;
+    }
+  }
+
   // Comments
   Future<void> loadComments(String postId) async {
     loading.value = true;
@@ -263,10 +285,53 @@ class CommunityController extends GetxController {
     }
   }
 
-  Future<void> addComment(String postId, String text) async {
+  Future<void> addComment(String postId, String text, {String? parentId}) async {
     try {
-      final c = await _communityRepo.addComment(postId, text);
+      final c = await _communityRepo.addComment(postId, text, parentId: parentId);
       comments.add(c);
+      final index = posts.indexWhere((p) => p.id == postId);
+      if (index != -1) {
+        final p = posts[index];
+        posts[index] = p.copyWith(
+          commentsCount: p.commentsCount + 1,
+          comments: p.comments + 1,
+        );
+      }
+    } catch (e) {
+      apiError.value = e.toString();
+      rethrow;
+    }
+  }
+
+  Future<void> toggleCommentLike(String commentId) async {
+    try {
+      final res = await _communityRepo.toggleCommentLike(commentId);
+      final idx = comments.indexWhere((c) => c.id == commentId);
+      if (idx != -1) {
+        comments[idx] = comments[idx].copyWith(
+          liked: res['liked'] == true,
+          likeCount: (res['like_count'] as num?)?.toInt() ??
+              (comments[idx].likeCount + (res['liked'] == true ? 1 : -1)),
+        );
+      }
+    } catch (e) {
+      apiError.value = e.toString();
+      rethrow;
+    }
+  }
+
+  Future<void> deleteComment(String commentId, String postId) async {
+    try {
+      await _communityRepo.deleteComment(commentId);
+      comments.removeWhere((c) => c.id == commentId);
+      final index = posts.indexWhere((p) => p.id == postId);
+      if (index != -1) {
+        final p = posts[index];
+        posts[index] = p.copyWith(
+          commentsCount: (p.commentsCount - 1).clamp(0, 999999),
+          comments: (p.comments - 1).clamp(0, 999999),
+        );
+      }
     } catch (e) {
       apiError.value = e.toString();
       rethrow;
@@ -304,6 +369,57 @@ class CommunityController extends GetxController {
     } catch (e) {
       apiError.value = e.toString();
       rethrow;
+    }
+  }
+
+  Future<Community> fetchCommunityDetails(String id) async {
+    final c = await _communityRepo.details(id);
+    final idx = communities.indexWhere((x) => x.id == id);
+    if (idx != -1) {
+      communities[idx] = c;
+    } else {
+      communities.add(c);
+    }
+    if (c.isJoined && !joinedCommunities.contains(id)) {
+      joinedCommunities.add(id);
+    }
+    return c;
+  }
+
+  Future<void> leaveCommunity(String id) async {
+    try {
+      await _communityRepo.leaveCommunity(id);
+      joinedCommunities.remove(id);
+      final idx = communities.indexWhere((c) => c.id == id);
+      if (idx != -1) {
+        communities[idx] = communities[idx].copyWith(
+          isJoined: false,
+          joined: false,
+          memberCount: (communities[idx].memberCount - 1).clamp(0, 999999),
+        );
+      }
+    } catch (e) {
+      apiError.value = e.toString();
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCommunity(String id) async {
+    try {
+      await _communityRepo.deleteCommunity(id);
+      communities.removeWhere((c) => c.id == id);
+      joinedCommunities.remove(id);
+    } catch (e) {
+      apiError.value = e.toString();
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>?> fetchSubscriptionStatus(String communityId) async {
+    try {
+      return await _communityRepo.subscriptionStatus(communityId);
+    } catch (_) {
+      return null;
     }
   }
 
@@ -363,9 +479,6 @@ class CommunityController extends GetxController {
   }
 
   Future<void> inviteToCircle(String communityId, String personId) async {
-    await NetworkApiService.instance.post('/content/circle-invitation', data: {
-      'community_id': communityId,
-      'person_id': personId,
-    });
+    await _communityRepo.inviteMember(communityId, personId);
   }
 }

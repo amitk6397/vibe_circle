@@ -33,6 +33,10 @@ class ApiUrls {
   static String get verifyEmail => '/auth/verify-email';
   static String get referralInfo => '/auth/referral-info';
 
+  // Media Uploads
+  static String get upload => '/uploads';
+  static String get uploads => '/uploads';
+
   // App content endpoints
   static String get support => '/app-content/support';
 
@@ -88,6 +92,7 @@ class ApiUrls {
   static String sendCommunityMessage(String id) => '/communities/$id/messages';
   static String communitySubscriptionStatus(String id) =>
       '/communities/$id/subscription-status';
+  static String communityWs(String id) => '/communities/ws/$id';
 
   // Story endpoints
   static String get stories => '/feed/stories';
@@ -112,6 +117,7 @@ class ApiUrls {
       '/chat/conversations/$conversationId/messages';
   static String reactMessage(String messageId) =>
       '/chat/messages/$messageId/reactions';
+  static String editMessage(String messageId) => '/chat/messages/$messageId';
   static String deleteMessage(String messageId) => '/chat/messages/$messageId';
   static String get chatLimits => '/chat/limits';
   static String get messageRequests => '/chat/message-requests';
@@ -192,9 +198,6 @@ class ApiUrls {
   static String livestreamJoin(String id) => '/livestream/$id/join';
   static String livestreamLeave(String id) => '/livestream/$id/leave';
   static String livestreamSendGift(String id) => '/livestream/$id/gift';
-
-  // Uploads endpoints
-  static String get uploads => '/uploads';
 
   // Call config & history
   static String get callsConfig => '/calls/config';

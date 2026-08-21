@@ -6,6 +6,7 @@ import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_screen.dart';
 import '../../../core/widgets/app_pill.dart';
+import '../../../routes/app_routes.dart';
 import '../../discovery/widgets/person_card.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../discovery/controllers/discovery_controller.dart';
@@ -50,21 +51,31 @@ class _ConnectionsViewState extends State<ConnectionsView> {
           children: [
             // Tabs followers vs following
             Row(
-              children: ['Followers', 'Following'].map((tab) {
-                final bool isSel = _activeTab == tab;
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: AppPill(
-                      label: tab,
-                      selected: isSel,
-                      onPressed: () {
-                        setState(() => _activeTab = tab);
-                      },
-                    ),
+              children: [
+                Expanded(
+                  child: AppPill(
+                    label: 'Followers',
+                    selected: _activeTab == 'Followers',
+                    onPressed: () => setState(() => _activeTab = 'Followers'),
                   ),
-                );
-              }).toList(),
+                ),
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: AppPill(
+                    label: 'Following',
+                    selected: _activeTab == 'Following',
+                    onPressed: () => setState(() => _activeTab = 'Following'),
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: AppPill(
+                    label: 'Requests',
+                    selected: false,
+                    onPressed: () => Get.toNamed(AppRoutes.CONNECTION_REQUEST),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16.0),
 

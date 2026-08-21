@@ -24,26 +24,32 @@ class _SplashViewState extends State<SplashView> {
     _checkSession();
   }
 
-  void _checkSession() {
-    if (_appController.sessionReady.value) {
+  void _checkSession() async {
+    try {
+      // 1. Wait for system/storage bootstrap
+      if (!_appController.sessionReady.value) {
+        await _appController.sessionReady.stream.firstWhere((ready) => ready == true).timeout(const Duration(seconds: 4));
+      }
+
+      // 2. Wait for auth bootstrap token check
+      if (_authController.loading.value) {
+        await _authController.loading.stream.firstWhere((loading) => loading == false).timeout(const Duration(seconds: 4));
+      }
+    } catch (_) {
+      // Timeout fallback
+    }
+
+    if (mounted) {
       _navigate();
-    } else {
-      _subscription = _appController.sessionReady.listen((ready) {
-        if (ready) {
-          _navigate();
-        }
-      });
     }
   }
 
   void _navigate() {
-    Timer(const Duration(milliseconds: 350), () {
-      if (_authController.authenticated.value) {
-        Get.offAllNamed(AppRoutes.MAIN);
-      } else {
-        Get.offAllNamed(AppRoutes.LOGIN);
-      }
-    });
+    if (_authController.authenticated.value) {
+      Get.offAllNamed(AppRoutes.MAIN);
+    } else {
+      Get.offAllNamed(AppRoutes.LOGIN);
+    }
   }
 
   @override

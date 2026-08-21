@@ -37,43 +37,145 @@ class GoLiveView extends GetView<GoLiveController> {
   }
 
   Widget _buildSetupScreen(GoLiveController c) {
-    return AppScreen(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final engine = c.engine;
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
         children: [
-          const AppHeader(
-            title: 'Go Live',
-            subtitle: 'Start broadcasting to your followers',
+          // Live Camera Preview in background
+          Positioned.fill(
+            child: engine != null && c.agoraReady.value && c.cameraEnabled.value
+                ? AgoraVideoView(
+                    controller: VideoViewController(
+                      rtcEngine: engine,
+                      canvas: const VideoCanvas(uid: 0),
+                    ),
+                  )
+                : Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF1E1B4B), Color(0xFF0F172A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.videocam_outlined, color: Colors.white24, size: 72),
+                    ),
+                  ),
           ),
-          const SizedBox(height: 20.0),
-          AppField(
-            controller: c.titleCtrl,
-            label: 'Stream title',
-            placeholder: 'What are you streaming today?',
-          ),
-          const SizedBox(height: 16.0),
-          const Text('Category', style: AppTextStyles.label),
-          const SizedBox(height: 8.0),
-          Obx(
-            () => Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
-              children: c.categories.map((cat) {
-                return AppPill(
-                  label: cat,
-                  selected: c.category.value == cat,
-                  onPressed: () => c.category.value = cat,
-                );
-              }).toList(),
+
+          // Gradient overlay for legibility
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.65),
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.85),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.4, 1.0],
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 32.0),
-          Obx(
-            () => AppButton(
-              title: c.starting.value ? 'Starting...' : '🔴 Go Live',
-              onPressed: c.starting.value ? () {} : c.startStream,
-              loading: c.starting.value,
-              disabled: c.starting.value,
+
+          // Setup Overlay UI
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top Header Row with back and switch camera
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                        onPressed: () => Get.back(),
+                      ),
+                      const Text(
+                        'Go Live Setup',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.flip_camera_ios, color: Colors.white, size: 26),
+                        onPressed: c.switchCamera,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Bottom Setup Controls Card
+                Container(
+                  margin: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(18.0),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(24.0),
+                    border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        blurRadius: 16.0,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AppField(
+                        controller: c.titleCtrl,
+                        label: 'Stream Title',
+                        placeholder: 'What are you streaming today?',
+                      ),
+                      const SizedBox(height: 12.0),
+                      const Text(
+                        'Category',
+                        style: TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      Obx(
+                        () => Wrap(
+                          spacing: 6.0,
+                          runSpacing: 6.0,
+                          children: c.categories.map((cat) {
+                            return AppPill(
+                              label: cat,
+                              selected: c.category.value == cat,
+                              onPressed: () => c.category.value = cat,
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 18.0),
+                      Obx(
+                        () => AppButton(
+                          title: c.starting.value ? 'Starting Live...' : '🔴 Start Broadcast',
+                          onPressed: c.starting.value ? () {} : c.startStream,
+                          loading: c.starting.value,
+                          disabled: c.starting.value,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],

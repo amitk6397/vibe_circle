@@ -37,6 +37,8 @@ class InboxController extends GetxController {
     inboxTab.value = tab;
   }
 
+  final Map<String, dynamic> _profileCache = {};
+
   Future<void> refreshInbox() async {
     loading.value = true;
     error.value = '';
@@ -46,9 +48,57 @@ class InboxController extends GetxController {
     try {
       // 1. Fetch Conversations
       final rawChats = await _chatRepo.conversations(folder: 'active');
-      chats.assignAll(
-        rawChats.map((c) => Chat.fromJson(c as Map<String, dynamic>)).toList(),
-      );
+      final List<Chat> parsedChats = [];
+
+      for (final raw in rawChats) {
+        if (raw is! Map) continue;
+        final map = Map<String, dynamic>.from(raw);
+        final baseChat = Chat.fromJson(map);
+
+        // Resolve other participant ID
+        String personId = '';
+        if (currentUserId != null && baseChat.participantIds.isNotEmpty) {
+          personId = baseChat.participantIds.firstWhere(
+            (id) => id != currentUserId,
+            orElse: () => baseChat.participantIds.first,
+          );
+        }
+
+        String displayName = baseChat.name ?? '';
+        String? avatarUrl = baseChat.avatarUrl;
+        bool isOnline = baseChat.online;
+
+        if (baseChat.type == 'match_anonymous') {
+          displayName = 'Anonymous Connect';
+        } else if (personId.isNotEmpty && (displayName.isEmpty || avatarUrl == null)) {
+          if (_profileCache.containsKey(personId)) {
+            final cached = _profileCache[personId];
+            displayName = cached['name'] ?? displayName;
+            avatarUrl = cached['avatar_url'] ?? avatarUrl;
+            isOnline = cached['is_online'] ?? isOnline;
+          } else {
+            try {
+              final p = await _userRepo.publicProfile(personId);
+              _profileCache[personId] = {
+                'name': p.name,
+                'avatar_url': p.avatarUrl,
+                'is_online': p.online,
+              };
+              displayName = p.name;
+              avatarUrl = p.avatarUrl;
+              isOnline = p.online;
+            } catch (_) {}
+          }
+        }
+
+        parsedChats.add(baseChat.copyWith(
+          name: displayName.isNotEmpty ? displayName : 'VibeCircle Member',
+          avatarUrl: avatarUrl,
+          online: isOnline,
+        ));
+      }
+
+      chats.assignAll(parsedChats);
 
       // 2. Fetch Joined Communities for Groups tab
       try {

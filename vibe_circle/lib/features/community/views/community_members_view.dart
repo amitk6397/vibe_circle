@@ -37,25 +37,40 @@ class _CommunityMembersViewState extends State<CommunityMembersView> {
   }
 
   void _loadMembers() async {
-    final Map args = Get.arguments ?? {};
+    final Map args = Get.arguments is Map ? Get.arguments : {};
     final String? communityId = args['communityId']?.toString();
 
     if (communityId != null) {
       try {
         await _communityController.loadMembers(communityId);
-        setState(() {
-          _members.clear();
-          _members.addAll(_communityController.membersList.map((x) => Person.fromJson(Map<String, dynamic>.from(x as Map))));
-        });
+        final List<Person> loaded = [];
+        for (final item in _communityController.membersList) {
+          if (item is Map) {
+            final userMap = item['user'] is Map
+                ? Map<String, dynamic>.from(item['user'])
+                : Map<String, dynamic>.from(item);
+            if (userMap.isNotEmpty) {
+              loaded.add(Person.fromJson(userMap));
+            }
+          }
+        }
+        if (mounted) {
+          setState(() {
+            _members.clear();
+            _members.addAll(loaded);
+          });
+        }
       } catch (_) {
-        setState(() {
-          _members.clear();
-          _members.addAll(_discoveryController.people);
-        });
+        if (mounted) {
+          setState(() {
+            _members.clear();
+            _members.addAll(_discoveryController.people);
+          });
+        }
       }
     }
 
-    setState(() => _loading = false);
+    if (mounted) setState(() => _loading = false);
   }
 
   @override

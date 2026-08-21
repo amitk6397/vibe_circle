@@ -78,18 +78,40 @@ class Chat {
   }
 
   factory Chat.fromJson(Map<String, dynamic> json) {
+    Message? parsedLastMessage;
+    if (json['last_message'] != null) {
+      if (json['last_message'] is Map) {
+        parsedLastMessage = Message.fromJson(Map<String, dynamic>.from(json['last_message'] as Map));
+      } else if (json['last_message'] is String && (json['last_message'] as String).isNotEmpty) {
+        parsedLastMessage = Message(
+          id: '',
+          chatId: json['id']?.toString() ?? '',
+          senderId: '',
+          text: json['last_message'] as String,
+          createdAt: json['updated_at'] != null
+              ? DateTime.tryParse(json['updated_at'].toString()) ?? DateTime.now()
+              : DateTime.now(),
+        );
+      }
+    }
+
+    final rawParticipants = json['participant_ids'] ?? json['member_ids'];
+    final List<String> pIds = (rawParticipants is List)
+        ? rawParticipants.map((e) => e.toString()).toList()
+        : [];
+
     return Chat(
       id: json['id'].toString(),
       type: json['type'] ?? 'private',
       name: json['name'],
-      avatarUrl: json['avatar_url'],
-      participantIds: (json['participant_ids'] as List?)?.map((e) => e.toString()).toList() ?? [],
-      lastMessage: json['last_message'] != null ? Message.fromJson(json['last_message']) : null,
-      unreadCount: json['unread_count'] ?? 0,
+      avatarUrl: json['avatar_url'] ?? json['avatarUrl'],
+      participantIds: pIds,
+      lastMessage: parsedLastMessage,
+      unreadCount: json['unread_count'] ?? json['unread'] ?? 0,
       updatedAt: json['updated_at'] != null
           ? DateTime.tryParse(json['updated_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
-      online: json['online'] ?? false,
+      online: json['online'] ?? json['is_online'] ?? false,
     );
   }
 

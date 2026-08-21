@@ -79,6 +79,54 @@ class Community {
     );
   }
 
+  Community copyWith({
+    String? id,
+    String? name,
+    String? description,
+    String? coverUrl,
+    String? avatarUrl,
+    String? logoUrl,
+    bool? isPrivate,
+    int? memberCount,
+    int? members,
+    String? category,
+    String? themeColor,
+    String? color,
+    List<String>? tags,
+    bool? isJoined,
+    bool? joined,
+    bool? isOwner,
+    bool? joinPending,
+    String? kind,
+    String? privacy,
+    int? maxMembers,
+    List<String>? rules,
+  }) {
+    return Community(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      coverUrl: coverUrl ?? this.coverUrl,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      logoUrl: logoUrl ?? this.logoUrl,
+      isPrivate: isPrivate ?? this.isPrivate,
+      memberCount: memberCount ?? this.memberCount,
+      members: members ?? this.members,
+      category: category ?? this.category,
+      themeColor: themeColor ?? this.themeColor,
+      color: color ?? this.color,
+      tags: tags ?? this.tags,
+      isJoined: isJoined ?? this.isJoined,
+      joined: joined ?? this.joined,
+      isOwner: isOwner ?? this.isOwner,
+      joinPending: joinPending ?? this.joinPending,
+      kind: kind ?? this.kind,
+      privacy: privacy ?? this.privacy,
+      maxMembers: maxMembers ?? this.maxMembers,
+      rules: rules ?? this.rules,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

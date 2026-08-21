@@ -26,6 +26,11 @@ class ChatRepository {
     await _apiService.post(ApiUrls.reactMessage(messageId), data: {'emoji': emoji});
   }
 
+  Future<Map<String, dynamic>> editMessage(String messageId, String text) async {
+    final response = await _apiService.patch(ApiUrls.editMessage(messageId), data: {'text': text});
+    return response.data as Map<String, dynamic>;
+  }
+
   Future<void> deleteMessage(String messageId) async {
     await _apiService.delete(ApiUrls.deleteMessage(messageId));
   }

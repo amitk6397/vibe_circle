@@ -4,6 +4,7 @@ import '../repositories/auth_repository.dart';
 import '../../../core/storage/local_storage.dart';
 import '../../../core/network/websocket_service.dart';
 import '../../wallet/repositories/wallet_repository.dart';
+import '../../../routes/app_routes.dart';
 
 class AuthController extends GetxController {
   final AuthRepository _authRepo = AuthRepository();
@@ -112,6 +113,7 @@ class AuthController extends GetxController {
       currentUserId.value = null;
       profile.value = null;
       loading.value = false;
+      Get.offAllNamed(AppRoutes.LOGIN);
     }
   }
 

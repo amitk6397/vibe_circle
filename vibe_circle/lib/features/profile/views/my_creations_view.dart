@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../routes/app_routes.dart';
+import '../../community/repositories/community_repository.dart';
+import '../repositories/user_repository.dart';
 
 class MyCreationsView extends StatefulWidget {
   const MyCreationsView({super.key});
@@ -17,9 +20,12 @@ class _MyCreationsViewState extends State<MyCreationsView> with SingleTickerProv
   bool _fabOpen = false;
   late AnimationController _fabController;
 
-  // In real app: get from AppController
-  final List _myPosts = [];
-  final List _myCommunities = [];
+  final UserRepository _userRepo = UserRepository();
+  final CommunityRepository _communityRepo = CommunityRepository();
+
+  bool _loading = true;
+  List<dynamic> _myPosts = [];
+  List<dynamic> _myCommunities = [];
 
   @override
   void initState() {
@@ -30,6 +36,30 @@ class _MyCreationsViewState extends State<MyCreationsView> with SingleTickerProv
     );
     _indicatorAnim = CurvedAnimation(parent: _tabIndicatorController, curve: Curves.easeInOut);
     _fabController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _loading = true);
+    try {
+      final activity = await _userRepo.activity();
+      final comms = await _communityRepo.listCommunities();
+
+      setState(() {
+        _myPosts = (activity['posts'] as List?) ?? [];
+        _myCommunities = comms.where((c) => c.isOwner).map((c) => {
+          'id': c.id,
+          'name': c.name,
+          'topic': c.category,
+          'category': c.category,
+          'members_count': c.memberCount,
+          'avatar_url': c.avatarUrl,
+        }).toList();
+      });
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -252,8 +282,11 @@ class _MyCreationsViewState extends State<MyCreationsView> with SingleTickerProv
   }
 
   Widget _buildPostsTab() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     if (_myPosts.isEmpty) {
-      return _EmptyState(
+      return const _EmptyState(
         icon: Icons.article_outlined,
         title: 'No posts yet',
         text: 'Tap + to create your first post.',
@@ -263,15 +296,39 @@ class _MyCreationsViewState extends State<MyCreationsView> with SingleTickerProv
       padding: const EdgeInsets.all(12),
       itemCount: _myPosts.length,
       itemBuilder: (context, index) {
-        final post = _myPosts[index] as Map;
-        return _PostCreationCard(post: post);
+        final post = _myPosts[index] is Map ? _myPosts[index] as Map : {};
+        return _PostCreationCard(
+          post: post,
+          onTap: () {
+            final postId = post['id']?.toString();
+            if (postId != null) {
+              Get.toNamed(AppRoutes.POST_DETAILS, arguments: {'postId': postId});
+            }
+          },
+          onDelete: () async {
+            final postId = post['id']?.toString();
+            if (postId == null) return;
+            try {
+              await _communityRepo.deletePost(postId);
+              setState(() {
+                _myPosts.removeAt(index);
+              });
+              Get.snackbar('Deleted', 'Post removed.');
+            } catch (e) {
+              Get.snackbar('Delete failed', e.toString());
+            }
+          },
+        );
       },
     );
   }
 
   Widget _buildCommunitiesTab() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     if (_myCommunities.isEmpty) {
-      return _EmptyState(
+      return const _EmptyState(
         icon: Icons.people_outline,
         title: 'No communities yet',
         text: 'Tap + to create your first community.',
@@ -281,8 +338,16 @@ class _MyCreationsViewState extends State<MyCreationsView> with SingleTickerProv
       padding: const EdgeInsets.all(12),
       itemCount: _myCommunities.length,
       itemBuilder: (context, index) {
-        final community = _myCommunities[index] as Map;
-        return _CommunityCreationCard(community: community);
+        final community = _myCommunities[index] is Map ? _myCommunities[index] as Map : {};
+        return _CommunityCreationCard(
+          community: community,
+          onTap: () {
+            final commId = community['id']?.toString();
+            if (commId != null) {
+              Get.toNamed(AppRoutes.COMMUNITY_DETAILS, arguments: {'communityId': commId});
+            }
+          },
+        );
       },
     );
   }
@@ -290,60 +355,72 @@ class _MyCreationsViewState extends State<MyCreationsView> with SingleTickerProv
 
 class _PostCreationCard extends StatelessWidget {
   final Map post;
-  const _PostCreationCard({required this.post});
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  const _PostCreationCard({
+    required this.post,
+    required this.onTap,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceAlt,
-              borderRadius: BorderRadius.circular(10),
+    final bodyText = post['content']?.toString() ?? post['body']?.toString() ?? post['title']?.toString() ?? 'Post';
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceAlt,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.article, color: AppColors.primary, size: 20),
             ),
-            child: const Icon(Icons.article, color: AppColors.primary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  post['body']?.toString() ?? '',
-                  style: AppTextStyles.body,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.favorite_outline, size: 14, color: AppColors.textMuted),
-                    const SizedBox(width: 4),
-                    Text('${post['likes'] ?? 0}', style: AppTextStyles.caption.copyWith(color: AppColors.textMuted)),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.chat_bubble_outline, size: 14, color: AppColors.textMuted),
-                    const SizedBox(width: 4),
-                    Text('${post['comments'] ?? 0}', style: AppTextStyles.caption.copyWith(color: AppColors.textMuted)),
-                  ],
-                ),
-              ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    bodyText,
+                    style: AppTextStyles.body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.favorite_outline, size: 14, color: AppColors.textMuted),
+                      const SizedBox(width: 4),
+                      Text('${post['likes_count'] ?? post['likes'] ?? 0}', style: AppTextStyles.caption.copyWith(color: AppColors.textMuted)),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.chat_bubble_outline, size: 14, color: AppColors.textMuted),
+                      const SizedBox(width: 4),
+                      Text('${post['comments_count'] ?? post['comments'] ?? 0}', style: AppTextStyles.caption.copyWith(color: AppColors.textMuted)),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppColors.textMuted),
-            onPressed: () {},
-          ),
-        ],
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: AppColors.danger),
+              onPressed: onDelete,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -351,44 +428,65 @@ class _PostCreationCard extends StatelessWidget {
 
 class _CommunityCreationCard extends StatelessWidget {
   final Map community;
-  const _CommunityCreationCard({required this.community});
+  final VoidCallback onTap;
+
+  const _CommunityCreationCard({
+    required this.community,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          Container(
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.3),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            Container(
+              height: 60,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            child: Row(
-              children: [
-                Text(community['name']?.toString() ?? '', style: AppTextStyles.titleSmall),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.visibility_outlined, color: AppColors.textMuted, size: 20),
-                  onPressed: () => Get.toNamed('/community-details', arguments: {'communityId': community['id']}),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppColors.textMuted, size: 20),
-                  onPressed: () {},
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          community['name']?.toString() ?? '',
+                          style: AppTextStyles.titleSmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (community['topic'] != null && community['topic'].toString().isNotEmpty)
+                          Text(
+                            community['topic'].toString(),
+                            style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward_ios, color: AppColors.textMuted, size: 14),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

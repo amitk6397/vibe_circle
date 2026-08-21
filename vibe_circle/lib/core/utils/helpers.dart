@@ -65,16 +65,62 @@ class Helpers {
     return 'Just now';
   }
 
+  static String timeAgo(dynamic dateInput) {
+    if (dateInput == null) return 'Just now';
+    DateTime date;
+    if (dateInput is DateTime) {
+      date = dateInput;
+    } else if (dateInput is String) {
+      if (dateInput.isEmpty) return 'Just now';
+      date = parseUTCDate(dateInput);
+    } else {
+      return 'Just now';
+    }
+
+    final diff = DateTime.now().difference(date);
+    if (diff.isNegative || diff.inSeconds < 45) {
+      return 'Just now';
+    }
+    if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}m ago';
+    }
+    if (diff.inHours < 24) {
+      return '${diff.inHours}h ago';
+    }
+    if (diff.inDays < 7) {
+      return '${diff.inDays}d ago';
+    }
+    if (diff.inDays < 30) {
+      final weeks = diff.inDays ~/ 7;
+      return '${weeks}w ago';
+    }
+    if (diff.inDays < 365) {
+      final months = diff.inDays ~/ 30;
+      return '${months}mo ago';
+    }
+    return '${diff.inDays ~/ 365}y ago';
+  }
+
   static String getInitials(String? name) {
     if (name == null || name.trim().isEmpty) return '?';
     final parts = name.trim().split(RegExp(r'\s+'));
-    return parts.map((p) => p.isEmpty ? '' : p[0]).take(2).join('').toUpperCase();
+    final initials = parts.map((p) => p.isEmpty ? '' : p[0]).take(2).join('').toUpperCase();
+    return initials.isNotEmpty ? initials : '?';
   }
 
   static String? resolveImageUrl(String? url) {
     if (url == null) return null;
     final trimmed = url.trim();
     if (trimmed.isEmpty || trimmed == 'null' || trimmed == 'None') return null;
+
+    // Detect raw local device paths from Android/iOS/Desktop cache
+    if (trimmed.startsWith('/data/') ||
+        trimmed.startsWith('/storage/') ||
+        trimmed.startsWith('/var/mobile/') ||
+        trimmed.startsWith('C:\\') ||
+        trimmed.startsWith('D:\\')) {
+      return null;
+    }
 
     final base = ApiUrls.baseUrl.split('/api/')[0];
 
@@ -93,6 +139,10 @@ class Helpers {
         trimmed.startsWith('file://') ||
         trimmed.startsWith('content://')) {
       return trimmed;
+    }
+
+    if (trimmed.startsWith('/uploads/') || trimmed.startsWith('uploads/')) {
+      return '$base${trimmed.startsWith('/') ? '' : '/'}$trimmed';
     }
 
     return '$base${trimmed.startsWith('/') ? '' : '/'}$trimmed';

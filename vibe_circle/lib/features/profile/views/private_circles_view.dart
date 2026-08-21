@@ -127,7 +127,7 @@ class _CircleCard extends StatelessWidget {
                 children: [
                   Text(circle.name, style: AppTextStyles.titleSmall),
                   Text(
-                    '${circle.members ?? 0} members',
+                    '${circle.memberCount} members',
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.textMuted,
                     ),

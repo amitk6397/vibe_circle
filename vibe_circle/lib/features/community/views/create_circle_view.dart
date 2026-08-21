@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../routes/app_routes.dart';
+import '../controllers/community_controller.dart';
 
 class CreateCircleView extends StatefulWidget {
   const CreateCircleView({super.key});
@@ -26,9 +28,30 @@ class _CreateCircleViewState extends State<CreateCircleView> {
 
   Future<void> _create() async {
     setState(() => _creating = true);
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _creating = false);
-    Get.back(result: {'created': true});
+    try {
+      final payload = {
+        'name': _nameCtrl.text.trim(),
+        'description': _descCtrl.text.trim(),
+        'category': 'Private circle',
+        'privacy': 'private',
+        'kind': 'circle',
+        'max_members': int.parse(_limitCtrl.text.trim()),
+        'rules': ['Respect privacy', 'Ask before sharing outside the circle', 'Be kind'],
+        'color': '#6C63E8',
+      };
+      final comm = await Get.find<CommunityController>().createCommunity(payload);
+      Get.offNamed(AppRoutes.COMMUNITY_DETAILS, arguments: {'communityId': comm.id});
+      Get.snackbar(
+        'Circle created 🎉',
+        '${comm.name} is ready for invited members.',
+        backgroundColor: AppColors.primary,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar('Creation failed', e.toString());
+    } finally {
+      if (mounted) setState(() => _creating = false);
+    }
   }
 
   @override

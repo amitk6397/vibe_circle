@@ -168,7 +168,7 @@ class SubscriptionPlansView extends GetView<WalletController> {
                             crossAxisCount: 2,
                             mainAxisSpacing: 10.0,
                             crossAxisSpacing: 10.0,
-                            childAspectRatio: 0.72,
+                            childAspectRatio: 0.62,
                           ),
                           itemCount: list.length,
                           itemBuilder: (context, index) {
@@ -185,19 +185,20 @@ class SubscriptionPlansView extends GetView<WalletController> {
                                   child: AppCard(
                                     borderColor: isPopular ? AppColors.primary : Colors.transparent,
                                     borderWidth: isPopular ? 2.0 : 1.0,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
                                     child: Column(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        const SizedBox(height: 12.0),
+                                        const SizedBox(height: 6.0),
                                         const CircleAvatar(
-                                          radius: 20.0,
+                                          radius: 18.0,
                                           backgroundColor: Color(0xFFFF9800),
-                                          child: Icon(Icons.monetization_on, color: Colors.white, size: 22.0),
+                                          child: Icon(Icons.monetization_on, color: Colors.white, size: 20.0),
                                         ),
-                                        const SizedBox(height: 8.0),
+                                        const SizedBox(height: 6.0),
                                         Text(
                                           '${item.totalCoins}',
-                                          style: const TextStyle(color: AppColors.text, fontSize: 26.0, fontWeight: FontWeight.w900),
+                                          style: const TextStyle(color: AppColors.text, fontSize: 24.0, fontWeight: FontWeight.w900),
                                         ),
                                         const Text(
                                           'COINS',
@@ -205,18 +206,21 @@ class SubscriptionPlansView extends GetView<WalletController> {
                                         ),
                                         if (bonus > 0)
                                           Text(
-                                            'Includes $bonus bonus coins',
+                                            '+$bonus bonus coins',
                                             style: const TextStyle(color: Color(0xFF10B981), fontSize: 9.0, fontWeight: FontWeight.bold),
                                           ),
-                                        const SizedBox(height: 4.0),
+                                        const SizedBox(height: 2.0),
                                         Text(
                                           item.name,
                                           style: const TextStyle(color: AppColors.muted, fontSize: 10.0),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        const SizedBox(height: 10.0),
+                                        const SizedBox(height: 8.0),
                                         Obx(() => AppButton(
-                                          title: 'Buy for ${item.currency}${item.price}',
+                                          title: 'Buy ${item.currency}${item.price}',
                                           tone: isPopular ? AppButtonTone.primary : AppButtonTone.secondary,
+                                          compact: true,
                                           loading: controller.buyingId.value == item.id,
                                           onPressed: () => _buyCoins(item),
                                         )),

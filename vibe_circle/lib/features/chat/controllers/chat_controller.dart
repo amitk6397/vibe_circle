@@ -166,9 +166,20 @@ class ChatController extends GetxController {
     await _chatRepo.reactMessage(chatId, messageId, emoji);
   }
 
+  Future<void> editMessage(String messageId, String newText) async {
+    await _chatRepo.editMessage(messageId, newText);
+    final idx = messages.indexWhere((m) => m.id == messageId);
+    if (idx != -1) {
+      messages[idx] = messages[idx].copyWith(text: newText, edited: true);
+    }
+  }
+
   Future<void> deleteMessage(String messageId) async {
     await _chatRepo.deleteMessage(messageId);
-    messages.removeWhere((m) => m.id == messageId);
+    final idx = messages.indexWhere((m) => m.id == messageId);
+    if (idx != -1) {
+      messages[idx] = messages[idx].copyWith(text: '', deleted: true);
+    }
   }
 
   // Requests

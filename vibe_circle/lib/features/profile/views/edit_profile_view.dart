@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/api_urls.dart';
+import '../../../core/network/network_api_service.dart';
 import '../../../core/widgets/app_avatar.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_field.dart';
@@ -29,6 +31,7 @@ class _EditProfileViewState extends State<EditProfileView> {
   late TextEditingController _cityController;
 
   XFile? _avatarFile;
+  bool _removeAvatar = false;
   bool _saving = false;
   String _error = '';
 
@@ -43,9 +46,15 @@ class _EditProfileViewState extends State<EditProfileView> {
   }
 
   void _pickAvatar() async {
-    final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? file = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (file != null) {
-      setState(() => _avatarFile = file);
+      setState(() {
+        _avatarFile = file;
+        _removeAvatar = false;
+      });
     }
   }
 
@@ -73,19 +82,34 @@ class _EditProfileViewState extends State<EditProfileView> {
       final currentProfile = _authController.profile.value;
       if (currentProfile == null) return;
 
-      final updatedProfile = currentProfile.copyWith(
-        name: name,
-        username: username,
-        bio: bio,
-        city: _cityController.text.trim(),
-        avatarUrl: _avatarFile != null ? _avatarFile!.path : currentProfile.avatarUrl,
-      );
+      String? avatarUrl = _removeAvatar ? null : currentProfile.avatarUrl;
 
-      // Save via API
-      await _userRepo.updateProfile(updatedProfile.toJson());
+      // 1. Upload photo to server if a new one was picked
+      if (_avatarFile != null) {
+        final uploadResp = await NetworkApiService.instance.uploadFile(
+          ApiUrls.uploads,
+          File(_avatarFile!.path),
+        );
+        if (uploadResp.data != null && uploadResp.data['url'] != null) {
+          avatarUrl = uploadResp.data['url'] as String;
+        }
+      }
 
-      // Update local state
-      _authController.updateProfile(updatedProfile);
+      // 2. Build clean payload matching backend ProfileUpdate schema
+      final Map<String, dynamic> payload = {
+        'name': name,
+        'username': username,
+        'bio': bio,
+        'city': _cityController.text.trim(),
+        'avatar_url': avatarUrl,
+      };
+
+      // 3. Save via API
+      final updatedUser = await _userRepo.updateProfile(payload);
+
+      // 4. Update local state
+      _authController.updateProfile(updatedUser);
+
       Get.back();
       Get.snackbar(
         'Profile updated 🎉',
@@ -131,18 +155,42 @@ class _EditProfileViewState extends State<EditProfileView> {
                       radius: 45.0,
                       backgroundImage: FileImage(File(_avatarFile!.path)),
                     )
+                  else if (_removeAvatar)
+                    AppAvatar(
+                      name: _nameController.text.isNotEmpty ? _nameController.text : 'User',
+                      size: 90.0,
+                    )
                   else
                     AppAvatar(
-                      name: _nameController.text,
+                      name: _nameController.text.isNotEmpty ? _nameController.text : 'User',
                       avatarUrl: _authController.profile.value?.avatarUrl,
                       size: 90.0,
                     ),
                   const SizedBox(height: 10.0),
-                  AppButton(
-                    title: 'Change photo',
-                    compact: true,
-                    tone: AppButtonTone.secondary,
-                    onPressed: _pickAvatar,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AppButton(
+                        title: 'Change photo',
+                        compact: true,
+                        tone: AppButtonTone.secondary,
+                        onPressed: _pickAvatar,
+                      ),
+                      if (_avatarFile != null || (!_removeAvatar && _authController.profile.value?.avatarUrl != null && _authController.profile.value!.avatarUrl!.isNotEmpty)) ...[
+                        const SizedBox(width: 8.0),
+                        AppButton(
+                          title: 'Remove photo',
+                          compact: true,
+                          tone: AppButtonTone.ghost,
+                          onPressed: () {
+                            setState(() {
+                              _avatarFile = null;
+                              _removeAvatar = true;
+                            });
+                          },
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -164,7 +212,13 @@ class _EditProfileViewState extends State<EditProfileView> {
               controller: _bioController,
               multiline: true,
             ),
-            const SizedBox(height: 12.0),
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
+              child: Text(
+                '${_bioController.text.length}/240 characters',
+                style: const TextStyle(color: AppColors.muted, fontSize: 11.5),
+              ),
+            ),
             AppField(
               label: 'City (optional)',
               controller: _cityController,

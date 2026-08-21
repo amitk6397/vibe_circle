@@ -107,7 +107,7 @@ class _CommunityCard extends StatelessWidget {
                       children: [
                         Text(community.name, style: AppTextStyles.titleMedium),
                         Text(
-                          '${community.members ?? 0} members',
+                          '${community.memberCount} members',
                           style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
                         ),
                       ],

@@ -325,7 +325,28 @@ class _StreamCard extends StatelessWidget {
                   // Background
                   Positioned.fill(
                     child: avatarUrl != null && avatarUrl.isNotEmpty
-                        ? Image.network(avatarUrl, fit: BoxFit.cover)
+                        ? Image.network(
+                            avatarUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Color(0xFF3B3F9A), Color(0xFF7C3AED)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                initial,
+                                style: const TextStyle(
+                                  fontSize: 40.0,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          )
                         : Container(
                             decoration: const BoxDecoration(
                               gradient: LinearGradient(

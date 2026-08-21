@@ -84,12 +84,12 @@ class _CreateCommunityViewState extends State<CreateCommunityView> {
       String? coverUrl;
 
       if (_logoFile != null) {
-        final res = await NetworkApiService.instance.uploadFile(ApiUrls.uploads, _logoFile!);
-        logoUrl = res.data['url'] as String?;
+        final res = await NetworkApiService.instance.uploadFile(ApiUrls.upload, _logoFile!);
+        logoUrl = (res.data as Map<String, dynamic>?)?['url']?.toString();
       }
       if (_coverFile != null) {
-        final res = await NetworkApiService.instance.uploadFile(ApiUrls.uploads, _coverFile!);
-        coverUrl = res.data['url'] as String?;
+        final res = await NetworkApiService.instance.uploadFile(ApiUrls.upload, _coverFile!);
+        coverUrl = (res.data as Map<String, dynamic>?)?['url']?.toString();
       }
 
       final payload = {

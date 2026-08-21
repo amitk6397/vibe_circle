@@ -408,52 +408,72 @@ class WalletView extends GetView<WalletController> {
                     // Vertical Columns Graph
                     if (visibleChart.isNotEmpty) ...[
                       SizedBox(
-                        height: 130.0,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: visibleChart.map((item) {
-                            final double earnedHeight = (item.earned / maxChart) * 90.0;
-                            final double spentHeight = (item.spent / maxChart) * 90.0;
-                            final String dateStr = item.date;
+                        height: 135.0,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: visibleChart.length > 7
+                              ? const BouncingScrollPhysics()
+                              : const NeverScrollableScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minWidth: MediaQuery.of(context).size.width - 64.0,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: visibleChart.length <= 7
+                                  ? MainAxisAlignment.spaceAround
+                                  : MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: visibleChart.map((item) {
+                                final double earnedHeight = maxChart > 0
+                                    ? ((item.earned / maxChart) * 80.0).clamp(6.0, 80.0)
+                                    : 6.0;
+                                final double spentHeight = maxChart > 0
+                                    ? ((item.spent / maxChart) * 80.0).clamp(6.0, 80.0)
+                                    : 6.0;
+                                final String dateStr = item.date;
 
-                            return Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                return Container(
+                                  width: visibleChart.length > 7 ? 36.0 : null,
+                                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      Container(
-                                        width: 8.0,
-                                        height: earnedHeight.clamp(6.0, 90.0),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.success,
-                                          borderRadius: BorderRadius.circular(4.0),
-                                        ),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Container(
+                                            width: 6.0,
+                                            height: earnedHeight,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.success,
+                                              borderRadius: BorderRadius.circular(3.0),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 2.0),
+                                          Container(
+                                            width: 6.0,
+                                            height: spentHeight,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary,
+                                              borderRadius: BorderRadius.circular(3.0),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 3.0),
-                                      Container(
-                                        width: 8.0,
-                                        height: spentHeight.clamp(6.0, 90.0),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary,
-                                          borderRadius: BorderRadius.circular(4.0),
-                                        ),
+                                      const SizedBox(height: 6.0),
+                                      Text(
+                                        dateStr.length >= 5 ? dateStr.substring(5) : dateStr,
+                                        style: const TextStyle(color: AppColors.muted, fontSize: 9.0),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 6.0),
-                                  Text(
-                                    dateStr.length >= 5 ? dateStr.substring(5) : dateStr,
-                                    style: const TextStyle(color: AppColors.muted, fontSize: 9.5),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
+                                );
+                              }).toList(),
+                            ),
+                          ),
                         ),
                       ),
                     ],

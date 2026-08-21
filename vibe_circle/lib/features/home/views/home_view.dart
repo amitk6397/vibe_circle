@@ -743,11 +743,25 @@ class HomeView extends GetView<HomeController> {
                                         )
                                       else
                                         ...discoverPosts.map((post) {
-                                          return PostCard(
-                                            post: post,
-                                            onPressed: () => Get.toNamed(
-                                              AppRoutes.POST_DETAILS,
-                                              arguments: {'postId': post.id},
+                                          return Padding(
+                                            padding: const EdgeInsets.only(bottom: 12.0),
+                                            child: PostCard(
+                                              post: post,
+                                              onPressed: () => Get.toNamed(
+                                                AppRoutes.POST_DETAILS,
+                                                arguments: {'postId': post.id},
+                                              ),
+                                              onAuthorPressed: () {
+                                                if (post.authorId.isNotEmpty) {
+                                                  Get.toNamed(AppRoutes.PUBLIC_PROFILE, arguments: {'personId': post.authorId});
+                                                }
+                                              },
+                                              onLikePressed: () => communityController.toggleLike(post.id),
+                                              onBookmarkPressed: () => communityController.toggleSave(post.id),
+                                              onCommentPressed: () => Get.toNamed(
+                                                AppRoutes.POST_DETAILS,
+                                                arguments: {'postId': post.id},
+                                              ),
                                             ),
                                           );
                                         }),
@@ -1156,6 +1170,40 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildRecommendedCard(Person person) {
+    final String? resolvedAvatar = Helpers.resolveImageUrl(person.avatarUrl);
+    final String initialLetter = Helpers.getInitials(person.name);
+
+    Widget buildGradientFallback() {
+      Color baseColor = AppColors.primary;
+      try {
+        if (person.avatarColor.isNotEmpty) {
+          baseColor = Color(int.parse(person.avatarColor.replaceFirst('#', '0xFF')));
+        }
+      } catch (_) {}
+
+      return Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              baseColor,
+              baseColor.withAlpha(168),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          initialLetter,
+          style: const TextStyle(
+            fontSize: 44.0,
+            fontWeight: FontWeight.w900,
+            color: Colors.white70,
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: () => Get.toNamed(
         AppRoutes.PUBLIC_PROFILE,
@@ -1171,42 +1219,15 @@ class HomeView extends GetView<HomeController> {
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            // Background image or gradient
+            // Background image or gradient with first letter
             Positioned.fill(
-              child: person.avatarUrl != null && person.avatarUrl!.isNotEmpty
+              child: resolvedAvatar != null && resolvedAvatar.isNotEmpty
                   ? Image.network(
-                      Helpers.resolveImageUrl(person.avatarUrl!) ?? '',
+                      resolvedAvatar,
                       fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => buildGradientFallback(),
                     )
-                  : Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(
-                              int.parse(
-                                person.avatarColor.replaceFirst('#', '0xFF'),
-                              ),
-                            ),
-                            Color(
-                              int.parse(
-                                person.avatarColor.replaceFirst('#', '0xFF'),
-                              ),
-                            ).withAlpha(168),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        person.name[0].toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 44.0,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ),
+                  : buildGradientFallback(),
             ),
 
             // Online Dot Status

@@ -13,10 +13,38 @@ class PersonGridCard extends StatelessWidget {
     this.onPressed,
   });
 
+  Widget _buildGradientWithLetter(String name, String? colorHex) {
+    final initials = Helpers.getInitials(name);
+    Color baseColor = AppColors.primary;
+    try {
+      if (colorHex != null && colorHex.isNotEmpty) {
+        baseColor = Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
+      }
+    } catch (_) {}
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [baseColor, baseColor.withAlpha(168)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: const TextStyle(
+          fontSize: 48.0,
+          fontWeight: FontWeight.w900,
+          color: Colors.white70,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final hasPhoto = person.avatarUrl != null && person.avatarUrl!.isNotEmpty;
-    final photoUrl = hasPhoto ? (Helpers.resolveImageUrl(person.avatarUrl!) ?? '') : '';
+    final photoUrl = Helpers.resolveImageUrl(person.avatarUrl);
     final bgColor = person.avatarColor;
 
     return GestureDetector(
@@ -29,32 +57,17 @@ class PersonGridCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            // Full-card background — photo or gradient
+            // Full-card background — photo with fallback initials
             Positioned.fill(
-              child: hasPhoto && photoUrl.isNotEmpty
+              child: (photoUrl != null && photoUrl.isNotEmpty)
                   ? Image.network(
                       photoUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
-                          _buildGradientBg(bgColor),
+                          _buildGradientWithLetter(person.name, bgColor),
                     )
-                  : _buildGradientBg(bgColor),
+                  : _buildGradientWithLetter(person.name, bgColor),
             ),
-
-            // Initial letter (only when no photo)
-            if (!hasPhoto || photoUrl.isEmpty)
-              Positioned.fill(
-                child: Center(
-                  child: Text(
-                    person.name[0].toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 48.0,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ),
-              ),
 
             // Online indicator dot
             if (person.online == true)
@@ -173,26 +186,6 @@ class PersonGridCard extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGradientBg(String? colorHex) {
-    Color color;
-    try {
-      color = Color(
-        int.parse((colorHex ?? '#5B5CE2').replaceFirst('#', '0xFF')),
-      );
-    } catch (_) {
-      color = const Color(0xFF5B5CE2);
-    }
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withValues(alpha: 0.65)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
       ),
     );

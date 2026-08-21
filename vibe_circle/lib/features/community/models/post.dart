@@ -137,7 +137,15 @@ class Post {
               ? Map<String, int>.from(json['pollResults'] as Map)
               : {},
       myVote: json['my_vote'] ?? json['myVote'],
-      attachment: json['attachment'],
+      attachment: json['attachment'] ??
+          (parsedMediaUrls.isNotEmpty
+              ? {
+                  'id': rawId,
+                  'kind': 'image',
+                  'uri': parsedMediaUrls.first,
+                  'name': 'Post image',
+                }
+              : null),
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),

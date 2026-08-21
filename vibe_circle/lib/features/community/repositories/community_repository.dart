@@ -37,6 +37,11 @@ class CommunityRepository {
     return Post.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<Post> updatePost(String postId, String body) async {
+    final response = await _apiService.patch('/feed/posts/$postId', data: {'body': body});
+    return Post.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<void> likePost(String postId) async {
     await _apiService.post(ApiUrls.likePost(postId));
   }
@@ -47,9 +52,24 @@ class CommunityRepository {
     return list.map((e) => Comment.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<Comment> addComment(String postId, String text) async {
-    final response = await _apiService.post(ApiUrls.postComments(postId), data: {'text': text});
+  Future<Comment> addComment(String postId, String body, {String? parentId}) async {
+    final response = await _apiService.post(
+      ApiUrls.postComments(postId),
+      data: {
+        'body': body,
+        if (parentId != null && parentId.isNotEmpty) 'parent_id': parentId,
+      },
+    );
     return Comment.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> toggleCommentLike(String commentId) async {
+    final response = await _apiService.post('/feed/comments/$commentId/like');
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<void> deleteComment(String commentId) async {
+    await _apiService.delete('/feed/comments/$commentId');
   }
 
   Future<Community> createCommunity(Map<String, dynamic> payload) async {
@@ -59,6 +79,23 @@ class CommunityRepository {
 
   Future<void> joinCommunity(String id) async {
     await _apiService.post(ApiUrls.joinCommunity(id));
+  }
+
+  Future<void> leaveCommunity(String id) async {
+    await _apiService.post(ApiUrls.leaveCommunity(id));
+  }
+
+  Future<void> deleteCommunity(String id) async {
+    await _apiService.delete(ApiUrls.deleteCommunity(id));
+  }
+
+  Future<Map<String, dynamic>> subscriptionStatus(String id) async {
+    final response = await _apiService.get(ApiUrls.communitySubscriptionStatus(id));
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<void> inviteMember(String communityId, String personId) async {
+    await _apiService.post(ApiUrls.inviteToCircle(communityId), data: {'user_id': personId});
   }
 
   Future<List<dynamic>> members(String communityId) async {

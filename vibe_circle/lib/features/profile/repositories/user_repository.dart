@@ -72,6 +72,11 @@ class UserRepository {
     return response.data as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> activity() async {
+    final response = await _apiService.get('/users/me/activity');
+    return response.data as Map<String, dynamic>;
+  }
+
   Future<ApiUser> updateProfile(Map<String, dynamic> payload) async {
     final response = await _apiService.patch(ApiUrls.updateProfile, data: payload);
     return ApiUser.fromJson(response.data as Map<String, dynamic>);

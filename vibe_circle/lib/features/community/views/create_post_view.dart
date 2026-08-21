@@ -101,20 +101,21 @@ class _CreatePostViewState extends State<CreatePostView> {
       }
 
       final payload = {
-        'content': text,
+        'body': text,
+        'type': _postType.toLowerCase(),
         'anonymous': _anonymous,
-        'post_type': _postType,
-        'visibility': _visibility,
-        if (_communityId != null) 'community_id': _communityId,
-        if (_postType == 'Poll')
+        'visibility': _visibility.toLowerCase(),
+        if (_communityId != null && _communityId!.isNotEmpty) 'community_id': _communityId,
+        if (_postType.toLowerCase() == 'poll')
           'poll_options': _pollOptionControllers
               .map((c) => c.text.trim())
+              .where((s) => s.isNotEmpty)
               .toList(),
-        if (_postType == 'Question' && _bountyController.text.isNotEmpty)
+        if (_postType.toLowerCase() == 'question' && _bountyController.text.isNotEmpty)
           'bounty_amount': int.tryParse(_bountyController.text),
-        if (_visibility == 'private' && _priceController.text.isNotEmpty)
+        if (_visibility.toLowerCase() == 'private' && _priceController.text.isNotEmpty)
           'coin_price': int.tryParse(_priceController.text),
-        if (mediaUrls.isNotEmpty) 'media_urls': mediaUrls,
+        if (mediaUrls.isNotEmpty) 'media_url': mediaUrls.first,
       };
 
       await _communityController.createPost(payload);
@@ -384,17 +385,49 @@ class _CreatePostViewState extends State<CreatePostView> {
 
             // Poll Options Input
             if (_postType == 'Poll') ...[
-              AppField(
-                label: 'Option 1',
-                placeholder: 'Option 1',
-                controller: _pollOptionControllers[0],
-              ),
-              const SizedBox(height: 8.0),
-              AppField(
-                label: 'Option 2',
-                placeholder: 'Option 2',
-                controller: _pollOptionControllers[1],
-              ),
+              ..._pollOptionControllers.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final ctrl = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: AppField(
+                          label: 'Option ${idx + 1}',
+                          placeholder: 'Add an answer option',
+                          controller: ctrl,
+                        ),
+                      ),
+                      if (_pollOptionControllers.length > 2) ...[
+                        const SizedBox(width: 8.0),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 18.0),
+                          child: IconButton(
+                            icon: const Icon(Icons.remove_circle_outline, color: AppColors.danger),
+                            onPressed: () {
+                              setState(() {
+                                _pollOptionControllers.removeAt(idx).dispose();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }),
+              if (_pollOptionControllers.length < 6)
+                AppButton(
+                  title: '+ Add Option',
+                  tone: AppButtonTone.secondary,
+                  compact: true,
+                  onPressed: () {
+                    setState(() {
+                      _pollOptionControllers.add(TextEditingController());
+                    });
+                  },
+                ),
               const SizedBox(height: 16.0),
             ],
 

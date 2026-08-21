@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/widgets/app_animated_loader.dart';
+import '../../../routes/app_routes.dart';
+import '../repositories/user_repository.dart';
 
 class MyActivityView extends StatefulWidget {
   const MyActivityView({super.key});
@@ -16,6 +17,7 @@ class _MyActivityViewState extends State<MyActivityView> {
   bool _loading = true;
   String _error = '';
   Map<String, dynamic>? _activity;
+  final UserRepository _userRepo = UserRepository();
 
   @override
   void initState() {
@@ -26,19 +28,14 @@ class _MyActivityViewState extends State<MyActivityView> {
   Future<void> _load() async {
     setState(() { _loading = true; _error = ''; });
     try {
-      await Future.delayed(const Duration(seconds: 1));
+      final res = await _userRepo.activity();
       setState(() {
-        _activity = {
-          'counts': {'posts': 0, 'comments': 0, 'saved': 0},
-          'posts': [],
-          'comments': [],
-          'saved': [],
-        };
+        _activity = res;
       });
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -85,7 +82,7 @@ class _MyActivityViewState extends State<MyActivityView> {
           ),
           Expanded(
             child: _loading
-                ? const AppAnimatedLoader()
+                ? const Center(child: CircularProgressIndicator())
                 : _error.isNotEmpty
                     ? _ErrorState(error: _error, onRetry: _load)
                     : _items.isEmpty
@@ -141,29 +138,45 @@ class _ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (tab == 'comments')
+    final bodyText = item['content']?.toString() ??
+        item['body']?.toString() ??
+        item['text']?.toString() ??
+        item['title']?.toString() ??
+        'Activity';
+    final postId = item['post_id']?.toString() ?? item['id']?.toString();
+
+    return InkWell(
+      onTap: postId != null
+          ? () => Get.toNamed(AppRoutes.POST_DETAILS, arguments: {'postId': postId})
+          : null,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (tab == 'comments')
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4.0),
+                child: Text(
+                  'Your comment',
+                  style: AppTextStyles.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800),
+                ),
+              ),
+            Text(bodyText, style: AppTextStyles.body),
+            const SizedBox(height: 6),
             Text(
-              'Your comment',
-              style: AppTextStyles.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800),
+              '${item['likes_count'] ?? item['likes'] ?? 0} likes · ${item['comments_count'] ?? item['comments'] ?? 0} comments',
+              style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
             ),
-          Text(item['body']?.toString() ?? '', style: AppTextStyles.body),
-          const SizedBox(height: 6),
-          Text(
-            '${item['likes'] ?? 0} likes · ${item['comments'] ?? 0} comments',
-            style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

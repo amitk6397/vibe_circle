@@ -48,13 +48,41 @@ class GoLiveController extends GetxController {
   ];
 
   @override
+  void onInit() {
+    super.onInit();
+    initPreview();
+  }
+
+  Future<void> initPreview() async {
+    try {
+      final cam = await Permission.camera.request();
+      final mic = await Permission.microphone.request();
+      if (!cam.isGranted) return;
+
+      if (engine == null) {
+        engine = createAgoraRtcEngine();
+        await engine!.initialize(const RtcEngineContext(
+          appId: 'dev_preview_app_id',
+          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+        ));
+        await engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
+        await engine!.enableVideo();
+        await engine!.startPreview();
+        agoraReady.value = true;
+      }
+    } catch (e) {
+      debugPrint('Live preview error: $e');
+    }
+  }
+
+  @override
   void onClose() {
     titleCtrl.dispose();
     chatCtrl.dispose();
     chatScroll.dispose();
     _durationTimer?.cancel();
     releaseAgora();
-    if (streamId.value != null) {
+    if (streamId.value != null && streamId.value!.isNotEmpty) {
       _api.post(ApiUrls.livestreamEnd(streamId.value!)).catchError((_) => null);
     }
     super.onClose();
@@ -84,7 +112,7 @@ class GoLiveController extends GetxController {
       );
 
       final data = res.data as Map<String, dynamic>;
-      final sId = data['id']?.toString() ?? '';
+      final sId = data['stream']?['id']?.toString() ?? data['id']?.toString() ?? '';
       final agoraToken = data['agora_token'] as String? ?? '';
       final channelName = data['channel_name'] as String? ?? '';
       final agoraAppId = data['agora_app_id'] as String? ?? '';
@@ -119,10 +147,13 @@ class GoLiveController extends GetxController {
     required String channel,
   }) async {
     try {
-      if (appId.isEmpty) return;
-
-      engine = createAgoraRtcEngine();
-      await engine!.initialize(RtcEngineContext(appId: appId));
+      if (engine == null) {
+        engine = createAgoraRtcEngine();
+        await engine!.initialize(RtcEngineContext(
+          appId: appId.isNotEmpty ? appId : 'mock_app_id',
+          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+        ));
+      }
 
       engine!.registerEventHandler(
         RtcEngineEventHandler(
@@ -152,18 +183,24 @@ class GoLiveController extends GetxController {
 
       await engine!.enableVideo();
       await engine!.startPreview();
+      agoraReady.value = true;
+
       await engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
-      await engine!.joinChannel(
-        token: token,
-        channelId: channel,
-        uid: 0,
-        options: const ChannelMediaOptions(
-          clientRoleType: ClientRoleType.clientRoleBroadcaster,
-          publishCameraTrack: true,
-          publishMicrophoneTrack: true,
-        ),
-      );
-    } catch (_) {}
+      if (appId.isNotEmpty && token.isNotEmpty && channel.isNotEmpty) {
+        await engine!.joinChannel(
+          token: token,
+          channelId: channel,
+          uid: 0,
+          options: const ChannelMediaOptions(
+            clientRoleType: ClientRoleType.clientRoleBroadcaster,
+            publishCameraTrack: true,
+            publishMicrophoneTrack: true,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Agora init error: $e');
+    }
   }
 
   void _onRemoteMessage(Map<String, dynamic> msg) {

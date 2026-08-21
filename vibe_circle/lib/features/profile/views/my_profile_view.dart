@@ -10,6 +10,7 @@ import '../../../core/widgets/app_screen.dart';
 import '../../../core/widgets/app_pill.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../community/controllers/community_controller.dart';
+import '../controllers/profile_controller.dart';
 import '../../../routes/app_routes.dart';
 
 class MyProfileView extends GetView<AuthController> {
@@ -77,11 +78,28 @@ class MyProfileView extends GetView<AuthController> {
               // Stats row
               Row(
                 children: [
-                  Expanded(child: _buildStat('${communityController.posts.length}', 'Posts')),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Get.toNamed(AppRoutes.MY_CREATIONS),
+                      child: _buildStat('${communityController.posts.length}', 'Posts'),
+                    ),
+                  ),
                   const SizedBox(width: 10.0),
-                  Expanded(child: _buildStat('0', 'Followers')),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Get.toNamed(AppRoutes.CONNECTIONS),
+                      child: Obx(() {
+                        final profileCtrl = Get.isRegistered<ProfileController>()
+                            ? Get.find<ProfileController>()
+                            : Get.put(ProfileController());
+                        return _buildStat('${profileCtrl.connections.length}', 'Followers');
+                      }),
+                    ),
+                  ),
                   const SizedBox(width: 10.0),
-                  Expanded(child: _buildStat('${communityController.joinedCommunities.length}', 'Communities')),
+                  Expanded(
+                    child: _buildStat('${communityController.joinedCommunities.length}', 'Communities'),
+                  ),
                 ],
               ),
               const SizedBox(height: 22.0),

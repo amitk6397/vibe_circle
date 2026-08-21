@@ -20,11 +20,27 @@ class AppAvatar extends StatelessWidget {
     this.online = false,
   });
 
+  Color _getColorFromName(String name) {
+    if (name.isEmpty) return AppColors.primary;
+    final colors = [
+      const Color(0xFFE11D48), // Rose
+      const Color(0xFF9333EA), // Purple
+      const Color(0xFF2563EB), // Blue
+      const Color(0xFF0D9488), // Teal
+      const Color(0xFFD97706), // Amber
+      const Color(0xFF059669), // Emerald
+      const Color(0xFFEA580C), // Orange
+      const Color(0xFF7C3AED), // Violet
+    ];
+    final hash = name.codeUnits.fold<int>(0, (prev, elem) => prev + elem);
+    return colors[hash % colors.length];
+  }
+
   @override
   Widget build(BuildContext context) {
     final String? absoluteUri = Helpers.resolveImageUrl(uri ?? avatarUrl);
     final initials = Helpers.getInitials(name);
-    final avatarColor = color ?? AppColors.primary;
+    final avatarColor = color ?? _getColorFromName(name);
 
     return Stack(
       children: [
